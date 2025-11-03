@@ -1,4 +1,3 @@
-<!-- FILE: app/src/main/res/layout/activity_main.xml -->
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -16,7 +15,6 @@
         android:text="Готов к распознаванию речи"
         android:textSize="18sp"
         android:textColor="#E0E0E0"
-        android:fontFamily="sans-serif"
         android:paddingBottom="12dp" />
 
     <TextView
@@ -26,7 +24,6 @@
         android:text="Вы сказали: —"
         android:textSize="16sp"
         android:textColor="#CFCFCF"
-        android:fontFamily="sans-serif"
         android:paddingBottom="16dp" />
 
     <Button
@@ -35,7 +32,6 @@
         android:layout_height="48dp"
         android:text="🎤 Нажмите и говорите"
         android:textAllCaps="false"
-        android:fontFamily="sans-serif"
         android:backgroundTint="#C6B4F5"
         android:textColor="#30106A"
         android:layout_marginBottom="12dp" />
@@ -46,8 +42,6 @@
         android:layout_height="48dp"
         android:text="🧠 Тестовый запрос к ChatGPT"
         android:textAllCaps="false"
-        android:fontFamily="sans-serif"
         android:backgroundTint="#C6B4F5"
         android:textColor="#30106A" />
-
 </LinearLayout>
