@@ -61,6 +61,7 @@ StrictGuideAI_public/
 ├─ settings.gradle
 ├─ .gitignore
 ├─ README  project.md
+├─ README  project.md
 └─ README.md
 
 
