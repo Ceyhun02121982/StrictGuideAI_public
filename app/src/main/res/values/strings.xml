@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StrictGuide</string>
+   <string name="openai_api_key">OPENAI_API_KEY_PLACEHOLDER</string>
+
+    <!-- UI-       -->
+    <string name="btn_start">      </string>
+    <string name="btn_stop">    </string>
+    <string name="status_text">      :      </string>
+</resources>

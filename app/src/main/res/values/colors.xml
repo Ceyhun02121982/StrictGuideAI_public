@@ -1,0 +1,7 @@
+<!-- 📄 app/src/main/res/values/colors.xml -->
+<!-- ⬇️ НАЧАЛО ФАЙЛА colors.xml -->
+<resources>
+    <color name="purple_500">#C6B4F5</color>
+    <color name="purple_900">#30106A</color>
+</resources>
+    <!-- 🔚 КОНЕЦ ФАЙЛА colors.xml -->

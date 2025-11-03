@@ -1,0 +1,60 @@
+# =========================================
+# ⚙️ Android Studio / Gradle / Local files
+# =========================================
+
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE (Android Studio)
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# =========================================
+# 🔐 Секретные файлы и ключи
+# =========================================
+local.properties
+gradle.properties
+*.jks
+*.keystore
+.env
+.env.*
+apikey.txt
+secret.txt
+keys/
+secrets/
+
+# =========================================
+# 🧩 Кэш и временные файлы
+# =========================================
+captures/
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+Thumbs.db
+
+# =========================================
+# 📱 APK / AAB / Билды
+# =========================================
+*.apk
+*.ap_
+*.aab
+
+# =========================================
+# ⚙️ OS-specific
+# =========================================
+# Windows
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
