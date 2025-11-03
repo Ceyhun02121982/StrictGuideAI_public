@@ -10,15 +10,46 @@ jobs:
 
     steps:
       - name: Checkout repository
+      # забираем весь репозиторий
         uses: actions/checkout@v4
 
-      # покажем структуру проекта в логах, чтобы ты мог прислать её мне
+      # 1. Показать дерево проекта
       - name: Show project tree
         run: |
           pwd
           ls -R .
 
-      # соберём важные файлы в папку upload
+      # 2. Показать ключевые файлы прямо в логе
+      - name: Show important source files
+        run: |
+          echo "===== ROOT build.gradle ====="
+          [ -f build.gradle ] && cat build.gradle || echo "no build.gradle"
+
+          echo "===== settings.gradle ====="
+          [ -f settings.gradle ] && cat settings.gradle || echo "no settings.gradle"
+
+          echo "===== APP build.gradle ====="
+          [ -f app/build.gradle ] && cat app/build.gradle || echo "no app/build.gradle"
+
+          echo "===== AndroidManifest.xml ====="
+          [ -f app/src/main/AndroidManifest.xml ] && cat app/src/main/AndroidManifest.xml || echo "no AndroidManifest.xml"
+
+          echo "===== MainActivity.kt ====="
+          [ -f app/src/main/java/com/ceyhun/strictguide/MainActivity.kt ] && cat app/src/main/java/com/ceyhun/strictguide/MainActivity.kt || echo "no MainActivity.kt"
+
+          echo "===== activity_main.xml ====="
+          [ -f app/src/main/res/layout/activity_main.xml ] && cat app/src/main/res/layout/activity_main.xml || echo "no activity_main.xml"
+
+          echo "===== strings.xml ====="
+          [ -f app/src/main/res/values/strings.xml ] && cat app/src/main/res/values/strings.xml || echo "no strings.xml"
+
+          echo "===== themes.xml ====="
+          [ -f app/src/main/res/values/themes.xml ] && cat app/src/main/res/values/themes.xml || echo "no themes.xml"
+
+          echo "===== colors.xml ====="
+          [ -f app/src/main/res/values/colors.xml ] && cat app/src/main/res/values/colors.xml || echo "no colors.xml"
+
+      # 3. Собрать всё в артефакт — если нужно скачать
       - name: Collect Android sources
         run: |
           mkdir -p upload
@@ -36,18 +67,13 @@ jobs:
             mkdir -p upload/java
             cp -r app/src/main/java/* upload/java/
           fi
-          if [ -d app/src/main/kotlin ]; then
-            mkdir -p upload/kotlin
-            cp -r app/src/main/kotlin/* upload/kotlin/
-          fi
-          # ресурсы
+          # res
           if [ -d app/src/main/res ]; then
             mkdir -p upload/res
             cp -r app/src/main/res/* upload/res/
           fi
         shell: bash
 
-      # положим всё как артефакт, чтобы ты мог скачать
       - name: Upload for AI
         uses: actions/upload-artifact@v4
         with:
