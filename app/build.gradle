@@ -17,25 +17,31 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // ✅ включаем BuildConfig, чтобы можно было передавать ключ в код
+    // включаем нужные фичи
     buildFeatures {
+        // BuildConfig в app-проектах и так есть, но пусть будет явно
         buildConfig true
+        // на будущее, чтобы в MainActivity можно было писать binding = ActivityMainBinding.inflate(...)
+        viewBinding true
     }
 
     buildTypes {
         debug {
-            // Берём ключ из gradle.properties или из переменной окружения
+            // пробуем взять ключ из gradle.properties (локально)
+            // или из переменной окружения (на GitHub Actions)
             def apiKey = project.findProperty("OPENAI_API_KEY") ?: System.getenv("OPENAI_API_KEY") ?: ""
             buildConfigField "String", "OPENAI_API_KEY", "\"${apiKey}\""
         }
         release {
             def apiKey = project.findProperty("OPENAI_API_KEY") ?: System.getenv("OPENAI_API_KEY") ?: ""
             buildConfigField "String", "OPENAI_API_KEY", "\"${apiKey}\""
+
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
+    // ты в CI уже ставишь JDK 17 — тут тоже 17
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -46,16 +52,17 @@ android {
 }
 
 dependencies {
-
+    // AndroidX базовые
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
-    // ✅ библиотека для HTTP-запросов
+    // HTTP для запросов к OpenAI
     implementation 'com.squareup.okhttp3:okhttp:4.11.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.11.0'
 
+    // тесты
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
