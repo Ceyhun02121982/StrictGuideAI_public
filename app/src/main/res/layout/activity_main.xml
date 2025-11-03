@@ -1,10 +1,13 @@
-<!-- 📄 Файл: app/src/main/res/layout/activity_main.xml -->
+<!-- FILE: app/src/main/res/layout/activity_main.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:padding="16dp"
     android:background="#1A171B"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
 
     <TextView
         android:id="@+id/tvStatus"
@@ -14,7 +17,7 @@
         android:textSize="18sp"
         android:textColor="#E0E0E0"
         android:fontFamily="sans-serif"
-        android:paddingBottom="12dp"/>
+        android:paddingBottom="12dp" />
 
     <TextView
         android:id="@+id/tvHeard"
@@ -24,7 +27,7 @@
         android:textSize="16sp"
         android:textColor="#CFCFCF"
         android:fontFamily="sans-serif"
-        android:paddingBottom="16dp"/>
+        android:paddingBottom="16dp" />
 
     <Button
         android:id="@+id/btnMic"
@@ -35,7 +38,7 @@
         android:fontFamily="sans-serif"
         android:backgroundTint="#C6B4F5"
         android:textColor="#30106A"
-        android:layout_marginBottom="12dp"/>
+        android:layout_marginBottom="12dp" />
 
     <Button
         android:id="@+id/btnTest"
@@ -45,5 +48,6 @@
         android:textAllCaps="false"
         android:fontFamily="sans-serif"
         android:backgroundTint="#C6B4F5"
-        android:textColor="#30106A"/>
+        android:textColor="#30106A" />
+
 </LinearLayout>
