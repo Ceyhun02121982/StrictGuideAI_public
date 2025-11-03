@@ -4,7 +4,6 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -14,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 17 (Temurin)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -23,21 +22,23 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
-
-      # Если твой модуль называется не "app", поменяй путь ниже
-      - name: Build (assemble + unit tests)
-        run: |
-          ./gradlew clean build --stacktrace
-
-      # Сохраняем APK/AAB как артефакты
-      - name: Upload build artifacts
-        if: success()
-        uses: actions/upload-artifact@v4
         with:
-          name: android-build
-          path: |
-            **/build/outputs/apk/**/*.apk
-            **/build/outputs/bundle/**/*.aab
+          # Ставим нужные платформы/инструменты; при необходимости добавь другие
+          packages: |
+            platforms;android-34
+            build-tools;34.0.0
+            platform-tools
+            tools
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Gradle assembleDebug
+        run: ./gradlew --stacktrace --no-daemon :app:assembleDebug
+
+      - name: Upload APK (debug)
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
