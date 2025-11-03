@@ -1,6 +1,17 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -12,30 +23,28 @@ jobs:
           java-version: 17
           cache: gradle
 
-- name: Install Android SDK (manual fallback)
-  run: |
-    sudo apt-get update -qq
-    sudo apt-get install -y wget unzip
-    wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
-    mkdir -p $ANDROID_HOME/cmdline-tools
-    unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
-    mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-    yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-    echo "✅ Android SDK installed"
-
+      - name: Install Android SDK (manual fallback)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y wget unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          echo "✅ Android SDK installed"
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2
-        continue-on-error: true   # если валидатор капризничает — не роняем job
+        continue-on-error: true
 
       - name: Setup Gradle cache
         uses: gradle/actions/setup-gradle@v3
-        continue-on-error: true   # <— главное: падение кэша не ломает сборку
+        continue-on-error: true
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      # Лёгкий автоповтор билда (2 попытки)
       - name: Assemble Debug (with retry)
         run: |
           set -e
@@ -50,6 +59,3 @@ jobs:
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
-
-          # Trigger rebuild
-
