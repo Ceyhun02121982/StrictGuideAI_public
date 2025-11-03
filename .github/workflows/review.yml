@@ -1,43 +1,111 @@
-name: AI Code Review
+name: Android CI + AI Review
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
-  review:
+  build_and_review:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Send diff to OpenAI
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platforms;android-34
+            build-tools;34.0.0
+            platform-tools
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Assemble Debug (capture log, don't fail job)
+        id: assemble
+        run: |
+          set -o pipefail
+          ./gradlew --stacktrace --no-daemon :app:assembleDebug 2>&1 | tee build.log || true
+          tail -n 400 | tee build_tail.log
+
+      - name: Upload APK (if built)
+        if: ${{ success() && hashFiles('app/build/outputs/apk/debug/*.apk') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Prepare inputs for AI
+        run: |
+          # Ограничим размер диффа и лога, чтобы влезало в запрос
+          git fetch --depth=50
+          DIFF=$(git diff --unified=0 "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" | head -c 120000)
+          LOG=$(tail -n 400 build.log | head -c 60000)
+          printf "%s" "$DIFF" > diff.txt
+          printf "%s" "$LOG" > log_tail.txt
+          echo "Diff: $(wc -c < diff.txt) bytes"
+          echo "Log tail: $(wc -c < log_tail.txt) bytes"
+
+      - name: AI diagnosis (OpenAI)
+        id: ai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          git diff HEAD^ HEAD > diff.txt
-          RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $OPENAI_API_KEY" \
-            -d '{
-              "model": "gpt-4o-mini",
-              "messages": [
-                {"role": "system", "content": "Ты — ревьюер Android проекта. Проверь diff и предложи улучшения."},
-                {"role": "user", "content": "'"$(cat diff.txt | head -c 15000)"'"}
+          PROMPT=$(cat << 'EOF'
+Ты — старший Android-инженер. На входе:
+1) DIFF (изменения в коде);
+2) Последние 400 строк build.log (если сборка падала).
+
+Задачи:
+- Найди первопричину падения сборки/ошибки из лога (точные строки).
+- Укажи, в каких файлах и что исправить (imports, Gradle, SDK/AGP, manifest, ресурсы).
+- Дай минимальные патчи (code blocks) и объясни коротко почему.
+- Если сборка зелёная — проверь diff на потенциальные краши (NPE, context leaks, разрешения, CameraX, TTS/STT и т.д.).
+
+Отвечай кратко по-русски. Покажи фикс в код-блоках.
+EOF
+)
+          jq -n \
+            --arg sys "$PROMPT" \
+            --rawfile diff diff.txt \
+            --rawfile log log_tail.txt \
+            '{
+              model: "gpt-4o-mini",
+              messages: [
+                {"role":"system","content":$sys},
+                {"role":"user","content": ("DIFF:\n```diff\n" + $diff + "\n```\n\nBUILD LOG TAIL:\n```\n" + $log + "\n```")}
               ]
-            }' | jq -r '.choices[0].message.content')
+            }' > payload.json
+
+          RESPONSE=$(curl -sS https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer '"$OPENAI_API_KEY"'" \
+            -d @payload.json | jq -r '.choices[0].message.content // "Нет явных замечаний."')
+
           echo "$RESPONSE" > review.md
-          cat review.md
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$RESPONSE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Post review comment to PR
-        if: ${{ github.event_name == 'pull_request' }}
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { context } = github;
             const fs = require('fs');
-            const body = fs.readFileSync('review.md', 'utf8') || 'Нет явных замечаний.';
+            const body = fs.readFileSync('review.md', 'utf8').trim() || 'Нет явных замечаний.';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
