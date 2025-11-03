@@ -1,0 +1,55 @@
+name: Dump Android project for AI review
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # покажем структуру проекта в логах, чтобы ты мог прислать её мне
+      - name: Show project tree
+        run: |
+          pwd
+          ls -R .
+
+      # соберём важные файлы в папку upload
+      - name: Collect Android sources
+        run: |
+          mkdir -p upload
+          # манифест
+          [ -f app/src/main/AndroidManifest.xml ] && cp app/src/main/AndroidManifest.xml upload/ || true
+          # gradle
+          [ -f settings.gradle ] && cp settings.gradle upload/ || true
+          [ -f build.gradle ] && cp build.gradle upload/ || true
+          if [ -f app/build.gradle ]; then
+            mkdir -p upload/app
+            cp app/build.gradle upload/app/
+          fi
+          # kotlin/java
+          if [ -d app/src/main/java ]; then
+            mkdir -p upload/java
+            cp -r app/src/main/java/* upload/java/
+          fi
+          if [ -d app/src/main/kotlin ]; then
+            mkdir -p upload/kotlin
+            cp -r app/src/main/kotlin/* upload/kotlin/
+          fi
+          # ресурсы
+          if [ -d app/src/main/res ]; then
+            mkdir -p upload/res
+            cp -r app/src/main/res/* upload/res/
+          fi
+        shell: bash
+
+      # положим всё как артефакт, чтобы ты мог скачать
+      - name: Upload for AI
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-project-for-ai
+          path: upload
