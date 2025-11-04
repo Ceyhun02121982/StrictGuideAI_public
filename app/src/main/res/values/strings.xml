@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StrictGuide</string>
-    <string name="openai_api_key">YOUR_API_KEY_HERE</string>
+    <string name="openai_api_key">YOUR_API_KEY_HERE1</string>
 
 
     <!-- UI-       -->
