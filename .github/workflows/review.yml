@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # здесь ты можешь запускать свои проверки, линтеры и т.п.
+      # 1здесь ты можешь запускать свои проверки, линтеры и т.п.
       - name: Generate simple review
         run: |
           echo "Авто-проверка GitHub Actions:" > review.md
