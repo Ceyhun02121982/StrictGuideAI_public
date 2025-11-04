@@ -2,7 +2,8 @@ name: Dump Android project for AI review
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   dump:
@@ -10,69 +11,58 @@ jobs:
 
     steps:
       - name: Checkout repository
-      # забираем весь репозиторий
         uses: actions/checkout@v4
 
-      # 1. Показать дерево проекта
-      - name: Show project tree
+      # печатаем ключевые файлы в лог
+      - name: Show AndroidManifest.xml
         run: |
-          pwd
-          ls -R .
+          echo "===== ANDROIDMANIFEST ====="
+          cat app/src/main/AndroidManifest.xml || echo "no manifest"
 
-      # 2. Показать ключевые файлы прямо в логе
-      - name: Show important source files
+      - name: Show app/build.gradle
         run: |
-          echo "===== ROOT build.gradle ====="
-          [ -f build.gradle ] && cat build.gradle || echo "no build.gradle"
+          echo "===== APP BUILD.GRADLE ====="
+          cat app/build.gradle || echo "no app/build.gradle"
 
-          echo "===== settings.gradle ====="
-          [ -f settings.gradle ] && cat settings.gradle || echo "no settings.gradle"
+      - name: Show MainActivity.kt
+        run: |
+          echo "===== MAINACTIVITY ====="
+          cat app/src/main/java/com/ceyhun/strictguide/MainActivity.kt || echo "no main activity"
 
-          echo "===== APP build.gradle ====="
-          [ -f app/build.gradle ] && cat app/build.gradle || echo "no app/build.gradle"
+      - name: Show activity_main.xml
+        run: |
+          echo "===== ACTIVITY_MAIN.XML ====="
+          cat app/src/main/res/layout/activity_main.xml || echo "no layout"
 
-          echo "===== AndroidManifest.xml ====="
-          [ -f app/src/main/AndroidManifest.xml ] && cat app/src/main/AndroidManifest.xml || echo "no AndroidManifest.xml"
-
-          echo "===== MainActivity.kt ====="
-          [ -f app/src/main/java/com/ceyhun/strictguide/MainActivity.kt ] && cat app/src/main/java/com/ceyhun/strictguide/MainActivity.kt || echo "no MainActivity.kt"
-
-          echo "===== activity_main.xml ====="
-          [ -f app/src/main/res/layout/activity_main.xml ] && cat app/src/main/res/layout/activity_main.xml || echo "no activity_main.xml"
-
-          echo "===== strings.xml ====="
-          [ -f app/src/main/res/values/strings.xml ] && cat app/src/main/res/values/strings.xml || echo "no strings.xml"
-
-          echo "===== themes.xml ====="
-          [ -f app/src/main/res/values/themes.xml ] && cat app/src/main/res/values/themes.xml || echo "no themes.xml"
-
-          echo "===== colors.xml ====="
-          [ -f app/src/main/res/values/colors.xml ] && cat app/src/main/res/values/colors.xml || echo "no colors.xml"
-
-      # 3. Собрать всё в артефакт — если нужно скачать
-      - name: Collect Android sources
+      # а это — как у тебя, собрать всё в артефакт
+      - name: Prepare upload folder
         run: |
           mkdir -p upload
-          # манифест
-          [ -f app/src/main/AndroidManifest.xml ] && cp app/src/main/AndroidManifest.xml upload/ || true
+          # manifest
+          if [ -f app/src/main/AndroidManifest.xml ]; then
+            mkdir -p upload/app/src/main
+            cp app/src/main/AndroidManifest.xml upload/app/src/main/
+          fi
           # gradle
-          [ -f settings.gradle ] && cp settings.gradle upload/ || true
-          [ -f build.gradle ] && cp build.gradle upload/ || true
           if [ -f app/build.gradle ]; then
             mkdir -p upload/app
             cp app/build.gradle upload/app/
           fi
-          # kotlin/java
-          if [ -d app/src/main/java ]; then
-            mkdir -p upload/java
-            cp -r app/src/main/java/* upload/java/
+          # main activity
+          if [ -f app/src/main/java/com/ceyhun/strictguide/MainActivity.kt ]; then
+            mkdir -p upload/app/src/main/java/com/ceyhun/strictguide
+            cp app/src/main/java/com/ceyhun/strictguide/MainActivity.kt upload/app/src/main/java/com/ceyhun/strictguide/
           fi
-          # res
+          # layouts
+          if [ -d app/src/main/res/layout ]; then
+            mkdir -p upload/app/src/main/res/layout
+            cp -r app/src/main/res/layout/* upload/app/src/main/res/layout/
+          fi
+          # res (остальное) — аккуратно
           if [ -d app/src/main/res ]; then
-            mkdir -p upload/res
-            cp -r app/src/main/res/* upload/res/
+            mkdir -p upload/app/src/main/res
+            cp -r app/src/main/res/* upload/app/src/main/res/ || true
           fi
-        shell: bash
 
       - name: Upload for AI
         uses: actions/upload-artifact@v4
