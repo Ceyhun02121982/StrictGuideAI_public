@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StrictGuide</string>
-   <string name="openai_api_key">OPENAI_API_KEY_PLACEHOLDER</string>
+    <string name="openai_api_key">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</string>
 
-    <!-- UI-       -->
-    <string name="btn_start">      </string>
-    <string name="btn_stop">    </string>
-    <string name="status_text">      :      </string>
+    <!-- UI-������ -->
+    <string name="btn_start">������</string>
+    <string name="btn_stop">����</string>
+    <string name="status_text">������: �����</string>
 </resources>
