@@ -17,7 +17,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // ✅ включаем BuildConfig, чтобы можно было передавать ключ в код
+    // ✅ я тут 1
     buildFeatures {
         buildConfig true
     }
