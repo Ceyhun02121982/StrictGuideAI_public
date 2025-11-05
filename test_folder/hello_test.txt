@@ -1,0 +1,1 @@
+Файл: test_folder\hello_test.txt
