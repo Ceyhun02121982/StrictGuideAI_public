@@ -1,7 +1,7 @@
 // 📄 Файл: app/build.gradle
 // ✅ Исправленный для проекта StrictGuide (ChatGPT + Speech + Camera)
 
-plugins {
+lugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
