@@ -6,7 +6,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-androi {
+android {
     namespace 'com.ceyhun.strictguide'
     compileSdk 34
 
