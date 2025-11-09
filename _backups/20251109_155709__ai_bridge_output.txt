@@ -1,7 +1,7 @@
 Источник: GitHub Actions
-Run ID: 19084048838
+Run ID: 19044072868
 
 Найдена строка ошибки:
-2025-11-04T22:01:10.3670821Z FAILURE: Build failed with an exception.
+2025-11-03T17:46:13.3766881Z                     override fun onError(error: Int) {
 
 Сделай финальный файл ai_fix_*.txt в этом же каталоге.
