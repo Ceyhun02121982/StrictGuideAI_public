@@ -22,17 +22,19 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      # ✅ ставим Android SDK нормальным action'ом
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platforms;android-34
-            platform-tools
-            build-tools;34.0.0
+      # ✅ ставим SDK пакетами ПО ОДНОМУ
+      - name: Install Android SDK packages
+        run: |
+          yes | sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34"
+          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools"
+          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0"
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v3
 
       - name: Build Debug APK
         run: |
