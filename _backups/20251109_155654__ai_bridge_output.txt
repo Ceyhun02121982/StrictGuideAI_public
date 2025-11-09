@@ -1,7 +1,7 @@
 Источник: GitHub Actions
-Run ID: 19043765077
+Run ID: 19043736569
 
 Найдена строка ошибки:
-2025-11-03T17:35:40.5000359Z                     override fun onError(error: Int) {
+2025-11-03T17:34:46.5683290Z                     override fun onError(error: Int) {
 
 Сделай финальный файл ai_fix_*.txt в этом же каталоге.
