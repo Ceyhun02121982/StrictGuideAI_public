@@ -1,0 +1,7 @@
+Источник: GitHub Actions
+Run ID: 19042842421
+
+Найдена строка ошибки:
+2025-11-03T17:06:13.3797697Z ##[warning]Failed to restore gradle-home-v1|Linux|build[5df42585ae8f8da228c604b8b4e8707c]-69a06b44b0f346b91b51122c9ee93d6269c820f3: Error: Cache service responded with 400
+
+Сделай финальный файл ai_fix_*.txt в этом же каталоге.
