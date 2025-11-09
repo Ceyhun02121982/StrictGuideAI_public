@@ -6,19 +6,17 @@ on:
   pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    timeout-minutes: 30
 
     steps:
+      # 1️⃣ Проверяем репозиторий
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Ставим JDK
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -26,20 +24,49 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      # 3️⃣ Устанавливаем Android SDK, платформу и build-tools
+      - name: Install Android SDK packages
+        run: |
+          yes | sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0"
+
+      # 4️⃣ Делаем gradlew исполняемым
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # опционально можно проверить сам gradle-wrapper
+      # 5️⃣ Проверяем Gradle Wrapper
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v3
 
+      # 6️⃣ Чистим кеш и собираем Debug APK
       - name: Build Debug APK
         run: |
+          ./gradlew clean
           ./gradlew --no-daemon --stacktrace :app:assembleDebug
 
-      - name: Upload APK (debug)
+      # 7️⃣ Кэш для ускорения следующих сборок
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 8️⃣ Загружаем готовый APK
+      - name: Upload Debug APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
+
+      # 9️⃣ Показываем успешное сообщение
+      - name: Done
+        if: success()
+        run: echo "✅ Android CI успешно собрал проект!"
