@@ -1,7 +1,0 @@
-Источник: GitHub Actions
-Run ID: 19035721768
-
-Найдена строка ошибки:
-2025-11-03T13:09:08.2533824Z FAILURE: Build failed with an exception.
-
-Сделай финальный файл ai_fix_*.txt в этом же каталоге.
