@@ -1,4 +1,4 @@
-AI generated fix for run 19203945760:
-2025-11-09T05:27:36.8199652Z > Task :app:dataBindingMergeDependencyArtifactsDebug FAILED
+AI generated fix for run 19216721501:
+2025-11-10T00:20:28.5004996Z                     override fun onError(error: Int) {
 
-2025-11-09T05:27:36.8199652Z > Task :app:dataBindingMergeDependencyArtifactsDebug FAILED
+2025-11-10T00:20:28.5004996Z                     override fun onError(error: Int) {
