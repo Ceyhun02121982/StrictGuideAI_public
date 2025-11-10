@@ -1,1 +1,1 @@
-{'run_id': 19215502451, 'error': '2025-11-09T22:38:14.2705515Z > Task :app:dataBindingMergeDependencyArtifactsDebug FAILED'}
+{'run_id': 19215519191, 'error': '2025-11-09T22:40:18.9021827Z 1: Task failed with an exception.'}
