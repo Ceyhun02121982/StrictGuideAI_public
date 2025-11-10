@@ -1,9 +1,9 @@
-name: dump-for-ai
+name: Dump Android project for AI review
 
 on:
-  workflow_dispatch:
   push:
     branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   dump:
@@ -13,16 +13,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Make archive for AI
+      - name: Prepare upload directory
         run: |
-          mkdir -p ai-dump
-          cp -r app ai-dump/app || true
-          cp -r .github ai-dump/.github || true
-          cp build.gradle ai-dump/ || true
-          cp settings.gradle ai-dump/ || true
+          rm -rf upload
+          mkdir -p upload
+          mkdir -p upload/app
+          mkdir -p upload/.github/workflows
 
-      - name: Upload AI dump
+      - name: Copy root Gradle files
+        run: |
+          [ -f settings.gradle ] && cp settings.gradle upload/ || true
+          [ -f settings.gradle.kts ] && cp settings.gradle.kts upload/ || true
+          [ -f build.gradle ] && cp build.gradle upload/ || true
+          [ -f build.gradle.kts ] && cp build.gradle.kts upload/ || true
+          [ -f gradle.properties ] && cp gradle.properties upload/ || true
+
+      - name: Copy app module sources
+        run: |
+          if [ -d app ]; then
+            mkdir -p upload/app
+            cp app/build.gradle upload/app/ 2>/dev/null || true
+            cp app/build.gradle.kts upload/app/ 2>/dev/null || true
+
+            if [ -d app/src ]; then
+              mkdir -p upload/app/src
+              cp -r app/src/main upload/app/src/ 2>/dev/null || true
+              cp -r app/src/debug upload/app/src/ 2>/dev/null || true
+            fi
+          fi
+
+      - name: Copy workflows (for AI context)
+        run: |
+          if [ -d .github/workflows ]; then
+            cp -r .github/workflows upload/.github/
+          fi
+
+      - name: Upload for AI
         uses: actions/upload-artifact@v4
         with:
-          name: ai-project-dump
-          path: ai-dump
+          name: android-project-for-ai
+          path: upload

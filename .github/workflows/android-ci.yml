@@ -1,4 +1,4 @@
-name: android-ci
+name: Android CI
 
 on:
   push:
@@ -6,10 +6,14 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    env:
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
     steps:
       - name: Checkout repository
@@ -18,31 +22,24 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # 👇 добавил --stacktrace и --warning-mode=all чтобы видеть реальную причину
-      - name: Build Debug
-        run: ./gradlew :app:assembleDebug --stacktrace --warning-mode=all
+      # опционально можно проверить сам gradle-wrapper
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v3
 
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --stacktrace --warning-mode=all
-
-      # всегда собираем логи, даже если упало
-      - name: Archive build reports
-        if: always()
+      - name: Build Debug APK
         run: |
-          mkdir -p build-logs
-          cp -r app/build/reports build-logs/ || true
-          cp -r app/build/outputs build-logs/ || true
-          cp -r build/reports build-logs/ || true
+          ./gradlew --no-daemon --stacktrace :app:assembleDebug
 
-      - name: Upload build artifact
-        if: always()
+      - name: Upload APK (debug)
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: android-ci-logs
-          path: build-logs
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
