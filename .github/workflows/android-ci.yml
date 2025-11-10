@@ -21,24 +21,24 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Grant execute permission for gradlew
+      - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # главный шаг: тут сборка реально упадёт, если в build.gradle ошибка
+      # 👇 добавил --stacktrace и --warning-mode=all чтобы видеть реальную причину
       - name: Build Debug
-        run: ./gradlew :app:assembleDebug
+        run: ./gradlew :app:assembleDebug --stacktrace --warning-mode=all
 
-      # если есть тесты — можно прогнать
       - name: Run unit tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew testDebugUnitTest --stacktrace --warning-mode=all
 
-      # собираем логи для твоего bridge_auto.py
+      # всегда собираем логи, даже если упало
       - name: Archive build reports
         if: always()
         run: |
           mkdir -p build-logs
           cp -r app/build/reports build-logs/ || true
           cp -r app/build/outputs build-logs/ || true
+          cp -r build/reports build-logs/ || true
 
       - name: Upload build artifact
         if: always()
