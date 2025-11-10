@@ -1,2 +1,2 @@
-Run ID: 19216721955
-Error: 2025-11-10T00:20:32.6209593Z                     override fun onError(error: Int) {
+Run ID: 19216721972
+Error: 2025-11-10T00:21:05.0533491Z > Task :app:dataBindingMergeDependencyArtifactsDebug FAILED
