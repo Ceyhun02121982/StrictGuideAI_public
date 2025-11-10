@@ -1,5 +1,5 @@
 Источник: GitHub Actions
-Run ID: 19203732809
+Run ID: 19203732789
 
 Первая найденная строка с ошибкой:
-2025-11-09T05:08:24.7295768Z FAILURE: Build failed with an exception.
+не найдена
