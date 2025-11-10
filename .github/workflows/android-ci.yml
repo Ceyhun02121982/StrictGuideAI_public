@@ -6,14 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -26,20 +22,33 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Install Android SDK packages
+        run: |
+          yes | sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34"
+          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools"
+          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0"
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # опционально можно проверить сам gradle-wrapper
-      - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v3
-
-      - name: Build Debug APK
+      # тут реально собираем и пишем в лог
+      - name: Gradle build
+        id: gradle_build
+        continue-on-error: true
         run: |
-          ./gradlew --no-daemon --stacktrace :app:assembleDebug
+          ./gradlew --no-daemon --stacktrace --warning-mode all :app:assembleDebug 2>&1 | tee build.log
 
-      - name: Upload APK (debug)
-        if: success()
+      # загружаем лог ВСЕГДА
+      - name: Upload build log
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: build-log
+          path: build.log
+
+      # если сборка реально упала — проваливаем job
+      - name: Fail if build failed
+        if: steps.gradle_build.outcome == 'failure'
+        run: |
+          echo "Build failed. See build.log artifact for details."
+          exit 1

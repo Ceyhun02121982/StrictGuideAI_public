@@ -2,7 +2,7 @@ name: Dump Android project for AI review
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -13,39 +13,55 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare upload directory
+      # печатаем ключевые файлы в лог
+      - name: Show AndroidManifest.xml
         run: |
-          rm -rf upload
+          echo "===== ANDROIDMANIFEST ====="
+          cat app/src/main/AndroidManifest.xml || echo "no manifest"
+
+      - name: Show app/build.gradle
+        run: |
+          echo "===== APP BUILD.GRADLE ====="
+          cat app/build.gradle || echo "no app/build.gradle"
+
+      - name: Show MainActivity.kt
+        run: |
+          echo "===== MAINACTIVITY ====="
+          cat app/src/main/java/com/ceyhun/strictguide/MainActivity.kt || echo "no main activity"
+
+      - name: Show activity_main.xml
+        run: |
+          echo "===== ACTIVITY_MAIN.XML ====="
+          cat app/src/main/res/layout/activity_main.xml || echo "no layout"
+
+      # а это — как у тебя, собрать всё в артефакт
+      - name: Prepare upload folder
+        run: |
           mkdir -p upload
-          mkdir -p upload/app
-          mkdir -p upload/.github/workflows
-
-      - name: Copy root Gradle files
-        run: |
-          [ -f settings.gradle ] && cp settings.gradle upload/ || true
-          [ -f settings.gradle.kts ] && cp settings.gradle.kts upload/ || true
-          [ -f build.gradle ] && cp build.gradle upload/ || true
-          [ -f build.gradle.kts ] && cp build.gradle.kts upload/ || true
-          [ -f gradle.properties ] && cp gradle.properties upload/ || true
-
-      - name: Copy app module sources
-        run: |
-          if [ -d app ]; then
-            mkdir -p upload/app
-            cp app/build.gradle upload/app/ 2>/dev/null || true
-            cp app/build.gradle.kts upload/app/ 2>/dev/null || true
-
-            if [ -d app/src ]; then
-              mkdir -p upload/app/src
-              cp -r app/src/main upload/app/src/ 2>/dev/null || true
-              cp -r app/src/debug upload/app/src/ 2>/dev/null || true
-            fi
+          # manifest
+          if [ -f app/src/main/AndroidManifest.xml ]; then
+            mkdir -p upload/app/src/main
+            cp app/src/main/AndroidManifest.xml upload/app/src/main/
           fi
-
-      - name: Copy workflows (for AI context)
-        run: |
-          if [ -d .github/workflows ]; then
-            cp -r .github/workflows upload/.github/
+          # gradle
+          if [ -f app/build.gradle ]; then
+            mkdir -p upload/app
+            cp app/build.gradle upload/app/
+          fi
+          # main activity
+          if [ -f app/src/main/java/com/ceyhun/strictguide/MainActivity.kt ]; then
+            mkdir -p upload/app/src/main/java/com/ceyhun/strictguide
+            cp app/src/main/java/com/ceyhun/strictguide/MainActivity.kt upload/app/src/main/java/com/ceyhun/strictguide/
+          fi
+          # layouts
+          if [ -d app/src/main/res/layout ]; then
+            mkdir -p upload/app/src/main/res/layout
+            cp -r app/src/main/res/layout/* upload/app/src/main/res/layout/
+          fi
+          # res (остальное) — аккуратно
+          if [ -d app/src/main/res ]; then
+            mkdir -p upload/app/src/main/res
+            cp -r app/src/main/res/* upload/app/src/main/res/ || true
           fi
 
       - name: Upload for AI
