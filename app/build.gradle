@@ -6,7 +6,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-an443droid {
+an44322droid {
     namespace 'com.ceyhun.strictguide'
     compileSdk 34
 
