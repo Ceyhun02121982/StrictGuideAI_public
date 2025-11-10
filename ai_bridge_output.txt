@@ -1,7 +1,5 @@
-Источник: GitHub Actions
-Run ID: 19088540564
-
-Найдена строка ошибки:
-2025-11-05T01:43:45.5058242Z                     override fun onError(error: Int) {
-
-Сделай финальный файл ai_fix_*.txt в этом же каталоге.
+dependencies {
+    implementation 'com.android.support:appcompat-v7:28.0.0' // или актуальная версия
+    implementation 'androidx.appcompat:appcompat:1.4.1' // актуальная версия
+    // Добавьте другие зависимости здесь, если требуется
+}
