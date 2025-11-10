@@ -1,1 +1,1 @@
-{'run_id': 19216536261, 'error': '2025-11-10T00:09:43.0641957Z > Task :app:dataBindingMergeDependencyArtifactsDebug FAILED'}
+{'run_id': 19216536265, 'error': '2025-11-10T00:07:48.0552151Z                     override fun onError(error: Int) {'}
