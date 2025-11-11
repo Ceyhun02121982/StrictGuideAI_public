@@ -1,5 +1,0 @@
-Источник: GitHub Actions
-Run ID: 19203900807
-
-Первая найденная строка с ошибкой:
-2025-11-09T05:23:51.7423180Z FAILURE: Build completed with 3 failures.

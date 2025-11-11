@@ -1,4 +1,0 @@
-AI generated fix for run 19217005284:
-2025-11-10T00:38:35.6502554Z > Task :app:dataBindingMergeDependencyArtifactsDebug FAILED
-
-2025-11-10T00:38:35.6502554Z > Task :app:dataBindingMergeDependencyArtifactsDebug FAILED

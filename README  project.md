@@ -36,68 +36,31 @@ setx OPENAI_API_KEY "sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx"
 
 ## 📁 Структура проекта (все основные файлы)
 
-
-
 StrictGuideAI_public/
-│
-├── .git/
-│
-├── .github/
-│   └── workflows/
-│        ├── android-ci.yml
-│        ├── dump-for-ai.yml
-│        └── review.yml
-│
-├── .gradle/
-├── .idea/
-│
-├── app/
-│   ├── build/
-│   ├── src/
-│   │   └── main/
-│   │        ├── java/
-│   │        │   └── com/
-│   │        │       └── ceyhun/
-│   │        │           └── strictguide/
-│   │        │               └── MainActivity.kt
-│   │        │
-│   │        ├── res/
-│   │        │   ├── layout/
-│   │        │   │    └── activity_main.xml
-│   │        │   │
-│   │        │   └── values/
-│   │        │        ├── colors.xml
-│   │        │        ├── strings.xml
-│   │        │        └── themes.xml
-│   │        │
-│   │        ├── AndroidManifest.xml
-│   │        └── ic_launcher-playstore.png
-│   │
-│   ├── build.gradle
-│   └── proguard-rules.pro
-│
-├── build/
-│   └── reports/
-│        └── problems/
-│             └── problems-report.html
-│
-├── gradle/
-│   └── wrapper/
-│        ├── gradle-wrapper.jar
-│        └── gradle-wrapper.properties
-│
-├── .env
-├── .gitignore
-├── ai_bridge_output.txt
-├── build.gradle
-├── gradle.properties
-├── gradlew
-├── gradlew.bat
-├── local.properties
-├── main
-├── README_project.md
-├── README.md
-└── settings.gradle
-
+├─ app/
+│ ├─ build.gradle
+│ ├─ proguard-rules.pro
+│ └─ src/main/
+│ ├─ AndroidManifest.xml
+│ ├─ java/com/ceyhun/strictguide/
+│ │ └─ MainActivity.kt
+│ ├─ res/
+│ │ ├─ layout/activity_main.xml
+│ │ ├─ values/
+│ │ │ ├─ colors.xml
+│ │ │ ├─ strings.xml
+│ │ │ └─ themes.xml
+│ │ └─ mipmap/ (иконки)
+├─ gradle/
+│ └─ wrapper/
+│ ├─ gradle-wrapper.jar
+│ └─ gradle-wrapper.properties
+├─ gradlew
+├─ gradlew.bat
+├─ build.gradle
+├─ settings.gradle
+├─ .gitignore
+├─ README  project.md
+└─ README.md
 
 

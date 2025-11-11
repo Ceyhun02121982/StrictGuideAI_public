@@ -1,5 +1,0 @@
-Источник: GitHub Actions
-Run ID: 19203928304
-
-Первая найденная строка с ошибкой:
-2025-11-09T05:26:07.0524425Z FAILURE: Build failed with an exception.
