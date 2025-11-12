@@ -1,31 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- верхняя половина — камера -->
     <androidx.camera.view.PreviewView
         android:id="@+id/cameraPreview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
-    <TextView
-        android:id="@+id/tvStatus"
+    <!-- нижняя половина — статус и кнопка -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#80000000"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:padding="12dp"
-        android:text="Запуск камеры..." />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="12dp">
 
-    <Button
-        android:id="@+id/btnMic"
-        android:layout_width="160dp"
-        android:layout_height="48dp"
-        android:text="🎤 Сказать"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="32dp"
-        android:backgroundTint="#FF6200EE"
-        android:textColor="#FFFFFF" />
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Готов"
+            android:textSize="16sp"
+            android:paddingBottom="12dp" />
 
-</FrameLayout>
+        <Button
+            android:id="@+id/btnMic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎤 Сказать" />
+
+    </LinearLayout>
+
+</LinearLayout>
