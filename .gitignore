@@ -1,0 +1,103 @@
+# =========================================
+# ⚙️ Android Studio / Gradle / Local files
+# =========================================
+
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+.externalNativeBuild/
+.cxx/
+
+# =========================================
+# 🧠 Android project structure
+# =========================================
+local.properties
+.gradle/
+_build/
+_backups/
+**/_backups/
+
+# =========================================
+# 🧰 IDE (Android Studio / IntelliJ)
+# =========================================
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/gradle.xml
+.idea/**/libraries
+.idea/**/dictionaries
+.idea/**/vcs.xml
+.idea/**/shelf/
+.idea/**/caches/
+.idea/**/modules.xml
+.idea/**/compiler.xml
+
+# =========================================
+# 🔐 Секретные файлы и ключи
+# =========================================
+gradle.properties
+*.jks
+*.keystore
+.env
+.env.*
+apikey.txt
+secret.txt
+keys/
+secrets/
+
+# =========================================
+# 🧩 Кэш и временные файлы
+# =========================================
+captures/
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.lock
+*.DS_Store
+Thumbs.db
+
+# =========================================
+# 📱 APK / AAB / Билды
+# =========================================
+*.apk
+*.ap_
+*.aab
+
+# =========================================
+# ⚙️ OS-specific
+# =========================================
+# Windows
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+._*
+
+# =========================================
+# ☁️ Cloud sync junk (Google Drive / OneDrive)
+# =========================================
+.tmp.driveupload/
+.tmp.drivedownload/
+*.sync-conflict*
+desktop.ini
+**/desktop.ini
+
+# =========================================
+# 🧪 Reports / Tests / Lint
+# =========================================
+*.lint
+lint-results*.xml
+test-results/
+reports/
