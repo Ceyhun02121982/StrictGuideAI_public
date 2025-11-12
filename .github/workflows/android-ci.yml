@@ -6,49 +6,126 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "17"
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
 
-      - name: Install Android SDK packages
-        run: |
-          yes | sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34"
-          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools"
-          sudo $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0"
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platform-tools
+            platforms;android-34
+            build-tools;35.0.0
+            cmdline-tools;latest
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # тут реально собираем и пишем в лог
-      - name: Gradle build
+      # Сборка + тесты + линтер. tee сохраняет лог, set -o pipefail — правильный код возврата.
+      - name: Gradle build, test & lint
         id: gradle_build
-        continue-on-error: true
         run: |
-          ./gradlew --no-daemon --stacktrace --warning-mode all :app:assembleDebug 2>&1 | tee build.log
+          set -o pipefail
+          ./gradlew --no-daemon clean \
+            assembleDebug \
+            testDebugUnitTest \
+            lintDebug \
+            -Dorg.gradle.jvmargs="-Xmx2g" \
+          | tee build.log
 
-      # загружаем лог ВСЕГДА
+      # Сводка в шапке джоба
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Build summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Result: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- build.log" >> $GITHUB_STEP_SUMMARY
+          echo "- APK (debug): app/build/outputs/apk/debug/*.apk" >> $GITHUB_STEP_SUMMARY
+          echo "- Lint report: app/build/reports/lint-results-debug.html" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit tests: app/build/reports/tests/testDebugUnitTest/index.html" >> $GITHUB_STEP_SUMMARY
+
+      # Артефакты: лог
       - name: Upload build log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-log
           path: build.log
+          if-no-files-found: warn
+          retention-days: 15
 
-      # если сборка реально упала — проваливаем job
+      # Артефакты: APK
+      - name: Upload APK (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 15
+
+      # Артефакты: Lint
+      - name: Upload Lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: |
+            app/build/reports/lint-results-debug.html
+            app/build/reports/lint-results-debug.xml
+          if-no-files-found: warn
+          retention-days: 15
+
+      # Артефакты: Unit tests
+      - name: Upload unit test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-tests
+          path: |
+            app/build/reports/tests/testDebugUnitTest/**
+            app/build/test-results/testDebugUnitTest/**
+          if-no-files-found: warn
+          retention-days: 15
+
+      # Если сборка реально упала — проваливаем job
       - name: Fail if build failed
-        if: steps.gradle_build.outcome == 'failure'
-        run: |
-          echo "Build failed. See build.log artifact for details."
-          exit 1
+        if: ${{ failure() }}
+        run: exit 1

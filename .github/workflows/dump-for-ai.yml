@@ -1,98 +1,76 @@
-name: Dump Android project for AI review
+name: Dump Android project for AI
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   dump:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      # 1) забираем репозиторий
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2) быстрая валидация Gradle
-      #    тут мы специально ищем опечатки типа "an22droid {" и проверяем,
-      #    что в app/build.gradle вообще есть нормальный блок android { ... }
-      - name: Validate Gradle android block
+      - name: Build metadata
         run: |
-          FILE="app/build.gradle"
-          if [ ! -f "$FILE" ]; then
-            echo "⚠ app/build.gradle не найден — пропускаю проверку, но лучше его добавить."
-            exit 0
-          fi
+          mkdir -p upload/meta
+          echo "sha=${GITHUB_SHA}"         >  upload/meta/build_info.txt
+          echo "ref=${GITHUB_REF}"         >> upload/meta/build_info.txt
+          echo "actor=${GITHUB_ACTOR}"     >> upload/meta/build_info.txt
+          echo "repo=${GITHUB_REPOSITORY}" >> upload/meta/build_info.txt
+          echo "date=$(date -u)"           >> upload/meta/build_info.txt
 
-          # если встретили явную опечатку — сразу падаем
-          if grep -q "an22droid\s*{" "$FILE"; then
-            echo "❌ Найдена опечатка: 'an22droid {' в app/build.gradle"
-            exit 1
-          fi
-
-          # если НЕТ нормального android { — тоже падаем
-          if ! grep -q "android\s*{" "$FILE"; then
-            echo "❌ В app/build.gradle не найден блок 'android { ... }'"
-            exit 1
-          fi
-
-          echo "✅ Gradle-проверка прошла, продолжаю."
-
-      # 3) показать ключевые файлы в лог, как у тебя было
-      - name: Show AndroidManifest.xml
-        run: |
-          echo "===== ANDROIDMANIFEST ====="
-          cat app/src/main/AndroidManifest.xml || echo "no manifest"
-
-      - name: Show app/build.gradle
-        run: |
-          echo "===== APP BUILD.GRADLE ====="
-          cat app/build.gradle || echo "no app/build.gradle"
-
-      - name: Show MainActivity.kt
-        run: |
-          echo "===== MAINACTIVITY ====="
-          cat app/src/main/java/com/ceyhun/strictguide/MainActivity.kt || echo "no main activity"
-
-      - name: Show activity_main.xml
-        run: |
-          echo "===== ACTIVITY_MAIN.XML ====="
-          cat app/src/main/res/layout/activity_main.xml || echo "no layout"
-
-      # 4) собираем папку upload (твой старый сценарий)
-      - name: Prepare upload folder
+      - name: Collect sources & config
         run: |
           mkdir -p upload
-          # manifest
-          if [ -f app/src/main/AndroidManifest.xml ]; then
-            mkdir -p upload/app/src/main
-            cp app/src/main/AndroidManifest.xml upload/app/src/main/
+          # корневые файлы
+          cp -f settings.gradle*        upload/ 2>/dev/null || true
+          cp -f build.gradle*           upload/ 2>/dev/null || true
+          cp -f gradle.properties       upload/ 2>/dev/null || true
+          cp -f local.properties        upload/ 2>/dev/null || true
+          # модуль app
+          mkdir -p upload/app
+          cp -f app/build.gradle*       upload/app/ 2>/dev/null || true
+          # Android манифесты
+          mkdir -p upload/app/src/main
+          cp -rf app/src/main/AndroidManifest.xml upload/app/src/main/ 2>/dev/null || true
+          # Kotlin/Java исходники
+          if [ -d app/src/main/java ]; then
+            mkdir -p upload/app/src/main/java
+            rsync -a --delete --prune-empty-dirs \
+              --include="*/" --include="*.kt" --include="*.java" \
+              --exclude="*" app/src/main/java/ upload/app/src/main/java/
           fi
-          # gradle
-          if [ -f app/build.gradle ]; then
-            mkdir -p upload/app
-            cp app/build.gradle upload/app/
-          fi
-          # main activity
-          if [ -f app/src/main/java/com/ceyhun/strictguide/MainActivity.kt ]; then
-            mkdir -p upload/app/src/main/java/com/ceyhun/strictguide
-            cp app/src/main/java/com/ceyhun/strictguide/MainActivity.kt upload/app/src/main/java/com/ceyhun/strictguide/
-          fi
-          # layouts
-          if [ -d app/src/main/res/layout ]; then
-            mkdir -p upload/app/src/main/res/layout
-            cp -r app/src/main/res/layout/* upload/app/src/main/res/layout/
-          fi
-          # остальное res — аккуратно
+          # Ресурсы: layout и остальное
           if [ -d app/src/main/res ]; then
             mkdir -p upload/app/src/main/res
-            cp -r app/src/main/res/* upload/app/src/main/res/ || true
+            rsync -a --delete --prune-empty-dirs \
+              --include="*/" --include="*.xml" \
+              --exclude="*" app/src/main/res/ upload/app/src/main/res/
+          fi
+          # GitHub Actions
+          mkdir -p upload/.github/workflows
+          cp -rf .github/workflows/*.yml upload/.github/workflows/ 2>/dev/null || true
+          # Отчёты сборок, если есть
+          if [ -d app/build/reports ]; then
+            mkdir -p upload/app/build/reports
+            cp -rf app/build/reports/* upload/app/build/reports/ || true
           fi
 
-      # 5) загружаем артефакт для твоего локального AI
+      - name: Create tree listing
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y tree
+          tree upload > upload/meta/tree.txt || true
+
       - name: Upload for AI
         uses: actions/upload-artifact@v4
         with:
           name: android-project-for-ai
           path: upload
+          retention-days: 15
