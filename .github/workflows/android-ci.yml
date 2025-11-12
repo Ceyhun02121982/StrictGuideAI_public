@@ -19,10 +19,8 @@ on:
       - 'build.gradle'
       - '**/build.gradle'
       - '.github/workflows/android-ci.yml'
-  # ручной запуск при необходимости
   workflow_dispatch:
 
-# если ты часто пушишь — отменяем прошлые запуски для этой ветки
 concurrency:
   group: android-ci-${{ github.ref }}
   cancel-in-progress: true
@@ -32,9 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       JAVA_VERSION: '17'
-      ANDROID_SDK_ROOT: /usr/local/android-sdk
-      # если нужно прокинуть секреты в Gradle, раскомментируй и добавь в Settings → Secrets:
-      # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk   # ставим SDK в TMP (есть права)
+      ANDROID_HOME: ${{ runner.temp }}/android-sdk
 
     steps:
       - name: Checkout
@@ -47,48 +44,50 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
 
-      - name: Set up Android SDK (cmdline-tools)
-        uses: android-actions/setup-android@v3
+      - name: Prepare SDK directories
+        run: |
+          mkdir -p "${ANDROID_SDK_ROOT}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
+          echo "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "${ANDROID_SDK_ROOT}/platform-tools" >> $GITHUB_PATH
 
-      - name: Install Android SDK packages
+      # Ставим cmdline-tools БЕЗ sudo в пользовательский каталог
+      - name: Install Android cmdline-tools
         shell: bash
         run: |
+          set -e
+          cd "${ANDROID_SDK_ROOT}"
+          curl -L -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          mkdir -p cmdline-tools
+          unzip -q cmdline-tools.zip -d cmdline-tools
+          # Правильная структура: cmdline-tools/latest/...
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/cmdline-tools/* cmdline-tools/latest/
+          rm -f cmdline-tools.zip
           sdkmanager --version
+
+      - name: Accept licenses & install SDK packages
+        shell: bash
+        run: |
           yes | sdkmanager --licenses
-          sdkmanager \
-            "platform-tools" \
-            "platforms;android-34" \
-            "build-tools;34.0.0" \
-            "extras;google;m2repository" \
-            "extras;android;m2repository"
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # можно включить параллелизм, если модулей много
-      - name: Gradle build, test & lint (debug)
+      - name: Build, unit tests & lint (debug)
         run: |
           ./gradlew --no-daemon --stacktrace \
             assembleDebug \
             testDebugUnitTest \
             lintDebug
 
-      # собирать релиз только на теги v* (например v1.0.0)
-      - name: Build release bundle (on tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          ./gradlew --no-daemon --stacktrace \
-            assembleRelease \
-            bundleRelease
-
-      # артефакты сборки (debug)
       - name: Upload APK (debug)
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: |
-            app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/*.apk
 
       - name: Upload Lint report
         if: always()
@@ -109,14 +108,3 @@ jobs:
             **/build/test-results/testDebugUnitTest/*
             **/build/reports/tests/testDebugUnitTest/*
           if-no-files-found: ignore
-
-      # релизные артефакты (на тег)
-      - name: Upload AAB + mapping (release)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-aab-and-mapping
-          path: |
-            app/build/outputs/bundle/release/*.aab
-            app/build/outputs/mapping/release/mapping.txt
-          if-no-files-found: warn
