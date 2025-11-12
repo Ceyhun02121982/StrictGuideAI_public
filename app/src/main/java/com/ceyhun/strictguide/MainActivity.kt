@@ -102,4 +102,3 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 }
-// наши “модули”
