@@ -2,24 +2,39 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main", "master" ]
+    paths:
+      - 'app/**'
+      - 'gradle/**'
+      - 'gradle.properties'
+      - 'settings.gradle'
+      - 'build.gradle'
+      - '**/build.gradle'
+      - '.github/workflows/android-ci.yml'
   pull_request:
+    paths:
+      - 'app/**'
+      - 'gradle/**'
+      - 'gradle.properties'
+      - 'settings.gradle'
+      - 'build.gradle'
+      - '**/build.gradle'
+      - '.github/workflows/android-ci.yml'
+  # ручной запуск при необходимости
   workflow_dispatch:
 
-permissions:
-  contents: read
-
+# если ты часто пушишь — отменяем прошлые запуски для этой ветки
 concurrency:
   group: android-ci-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  JAVA_VERSION: "17"
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    env:
+      JAVA_VERSION: '17'
+      ANDROID_SDK_ROOT: /usr/local/android-sdk
+      # если нужно прокинуть секреты в Gradle, раскомментируй и добавь в Settings → Secrets:
+      # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     steps:
       - name: Checkout
@@ -32,100 +47,76 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
 
-      - name: Install Android SDK
+      - name: Set up Android SDK (cmdline-tools)
         uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platform-tools
-            platforms;android-34
-            build-tools;35.0.0
-            cmdline-tools;latest
 
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          sdkmanager --version
+          yes | sdkmanager --licenses
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "extras;google;m2repository" \
+            "extras;android;m2repository"
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # Сборка + тесты + линтер. tee сохраняет лог, set -o pipefail — правильный код возврата.
-      - name: Gradle build, test & lint
-        id: gradle_build
+      # можно включить параллелизм, если модулей много
+      - name: Gradle build, test & lint (debug)
         run: |
-          set -o pipefail
-          ./gradlew --no-daemon clean \
+          ./gradlew --no-daemon --stacktrace \
             assembleDebug \
             testDebugUnitTest \
-            lintDebug \
-            -Dorg.gradle.jvmargs="-Xmx2g" \
-          | tee build.log
+            lintDebug
 
-      # Сводка в шапке джоба
-      - name: Summary
-        if: always()
+      # собирать релиз только на теги v* (например v1.0.0)
+      - name: Build release bundle (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          echo "## Build summary" >> $GITHUB_STEP_SUMMARY
-          echo "- Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Result: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- build.log" >> $GITHUB_STEP_SUMMARY
-          echo "- APK (debug): app/build/outputs/apk/debug/*.apk" >> $GITHUB_STEP_SUMMARY
-          echo "- Lint report: app/build/reports/lint-results-debug.html" >> $GITHUB_STEP_SUMMARY
-          echo "- Unit tests: app/build/reports/tests/testDebugUnitTest/index.html" >> $GITHUB_STEP_SUMMARY
+          ./gradlew --no-daemon --stacktrace \
+            assembleRelease \
+            bundleRelease
 
-      # Артефакты: лог
-      - name: Upload build log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
-          if-no-files-found: warn
-          retention-days: 15
-
-      # Артефакты: APK
+      # артефакты сборки (debug)
       - name: Upload APK (debug)
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: apk-debug
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: warn
-          retention-days: 15
+          name: app-debug-apk
+          path: |
+            app/build/outputs/apk/debug/*.apk
 
-      # Артефакты: Lint
       - name: Upload Lint report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lint-report
+          name: lint-report-debug
           path: |
             app/build/reports/lint-results-debug.html
             app/build/reports/lint-results-debug.xml
-          if-no-files-found: warn
-          retention-days: 15
+          if-no-files-found: ignore
 
-      # Артефакты: Unit tests
       - name: Upload unit test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: unit-tests
+          name: unit-tests-debug
           path: |
-            app/build/reports/tests/testDebugUnitTest/**
-            app/build/test-results/testDebugUnitTest/**
-          if-no-files-found: warn
-          retention-days: 15
+            **/build/test-results/testDebugUnitTest/*
+            **/build/reports/tests/testDebugUnitTest/*
+          if-no-files-found: ignore
 
-      # Если сборка реально упала — проваливаем job
-      - name: Fail if build failed
-        if: ${{ failure() }}
-        run: exit 1
+      # релизные артефакты (на тег)
+      - name: Upload AAB + mapping (release)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab-and-mapping
+          path: |
+            app/build/outputs/bundle/release/*.aab
+            app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: warn
