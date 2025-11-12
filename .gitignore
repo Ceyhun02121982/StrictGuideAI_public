@@ -1,103 +1,94 @@
-# =========================================
-# ⚙️ Android Studio / Gradle / Local files
-# =========================================
-
-# Gradle
-.gradle/
-build/
-**/build/
-!gradle/wrapper/gradle-wrapper.jar
-.externalNativeBuild/
-.cxx/
-
-# =========================================
-# 🧠 Android project structure
-# =========================================
-local.properties
-.gradle/
-_build/
-_backups/
-**/_backups/
-
-# =========================================
-# 🧰 IDE (Android Studio / IntelliJ)
-# =========================================
-.idea/
-*.iml
-*.ipr
-*.iws
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/gradle.xml
-.idea/**/libraries
-.idea/**/dictionaries
-.idea/**/vcs.xml
-.idea/**/shelf/
-.idea/**/caches/
-.idea/**/modules.xml
-.idea/**/compiler.xml
-
-# =========================================
-# 🔐 Секретные файлы и ключи
-# =========================================
-gradle.properties
-*.jks
-*.keystore
-.env
-.env.*
-apikey.txt
-secret.txt
-keys/
-secrets/
-
-# =========================================
-# 🧩 Кэш и временные файлы
-# =========================================
-captures/
+########################################
+# 🌍 SYSTEM & IDE JUNK
+########################################
+.DS_Store
+Thumbs.db
+*.lnk
 *.log
 *.tmp
-*.temp
 *.bak
 *.swp
-*.lock
-*.DS_Store
-Thumbs.db
+*.temp
+*.orig
 
-# =========================================
-# 📱 APK / AAB / Билды
-# =========================================
+########################################
+# 🧠 ANDROID STUDIO / GRADLE
+########################################
+.idea/
+.gradle/
+local.properties
+build/
+captures/
+app/build/
+*/build/
+*.iml
+
+########################################
+# 🧰 PYTHON BRIDGE (ai_bridge, scripts)
+########################################
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+*.spec
+
+# Bridge output and fix system
+ai_bridge_output.txt
+ai_bridge_output_*.txt
+*_output.txt
+*_output_*.txt
+*_fix_*.txt
+*_applied*/
+fixes/
+fix-folder/
+logs/
+reports/
+tmp/
+backups/
+dreams/
+__backup__/
+*_backup*/
+*_backups*/
+
+########################################
+# 📦 GIT & LOCAL CONFIG
+########################################
+.env
+.env.*
+*.secret
+secrets.json
+*.key
+*.pem
+
+########################################
+# ⚙️ GITHUB ACTIONS & CI (keep only YAML)
+########################################
+# Allow YAML workflows
+!.github/
+!.github/workflows/
+!.github/workflows/*.yml
+
+# Ignore CI cache/temp
+.github/cache/
+.github/tmp/
+
+########################################
+# 🧱 MISC (images, zips, binaries)
+########################################
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.exe
 *.apk
-*.ap_
 *.aab
 
-# =========================================
-# ⚙️ OS-specific
-# =========================================
-# Windows
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-.Spotlight-V100
-.Trashes
-._*
-
-# =========================================
-# ☁️ Cloud sync junk (Google Drive / OneDrive)
-# =========================================
-.tmp.driveupload/
-.tmp.drivedownload/
-*.sync-conflict*
-desktop.ini
-**/desktop.ini
-
-# =========================================
-# 🧪 Reports / Tests / Lint
-# =========================================
-*.lint
-lint-results*.xml
-test-results/
-reports/
+########################################
+# 📚 DOCS / META (keep useful)
+########################################
+!README.md
+!CHANGELOG.md
+!LICENSE
