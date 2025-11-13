@@ -38,7 +38,7 @@ jobs:
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
-      - name: Accept Android SDK licenses (suppress Broken pipe)
+      - name: Accept Android SDK licenses (fix Broken pipe)
         shell: bash
         run: |
           set -eux
