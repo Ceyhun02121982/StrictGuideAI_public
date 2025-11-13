@@ -27,31 +27,37 @@ jobs:
           java-version: 17
           cache: gradle
 
-      - name: Install Android cmdline-tools
+      - name: Install Android cmdline-tools (fix path layout)
         run: |
           set -euxo pipefail
-          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
-          cd "$ANDROID_SDK_ROOT/cmdline-tools"
+          mkdir -p "$ANDROID_SDK_ROOT"
+          cd "$ANDROID_SDK_ROOT"
           curl -fsSLo tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q tools.zip -d latest
+          unzip -q tools.zip
           rm -f tools.zip
+          # Теперь структура: $ANDROID_SDK_ROOT/cmdline-tools/...
+          # Перемещаем в "latest", чтобы путь был .../latest/bin
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          mv cmdline-tools/* "$ANDROID_SDK_ROOT/cmdline-tools/latest/"
+          rmdir cmdline-tools || true
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
-      - name: Accept Android SDK licenses (fix Broken pipe)
+      - name: Accept Android SDK licenses (avoid Broken pipe)
         shell: bash
         run: |
           set -eux
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --version
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
 
       - name: Install SDK packages
         run: |
           set -euxo pipefail
-          sdkmanager --install \
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --install \
             "platform-tools" \
             "platforms;android-34" \
             "build-tools;34.0.0"
-          sdkmanager --list | head -n 50
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --list | head -n 50
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
