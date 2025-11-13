@@ -1,21 +1,4 @@
-# Read the user's uploaded workflow, then produce a fixed version alongside it.
-  from pathlib import Path
-  import re
-  
-  src = Path("/mnt/data/android-ci.yml")
-try:
-  original = src.read_text(encoding="utf-8")
-except Exception as e:
-  original = f"ERROR_READING_FILE: {e}"
-
-# Heuristics: ensure sdkmanager licenses step uses '|| true' and suppress logs, ensure ANDROID_SDK_ROOT set,
-# and that cmdline-tools are available. If file already has steps, we'll patch the licenses line.
-fixed = original
-
-# If the file couldn't be read, fallback to a robust template
-fallback_needed = original.startswith("ERROR_READING_FILE:") or not original.strip()
-
-template = """name: Android CI
+name: Android CI
 
 on:
   push:
@@ -87,44 +70,3 @@ jobs:
           path: |
             **/build/outputs/apk/**/*.apk
             !**/*-unaligned.apk
-  """
-
-if not fallback_needed:
-    text = fixed
-
-    # Ensure an "Accept licenses" step exists; if not, add after any step containing sdkmanager install/cmdline-tools
-if "sdkmanager --licenses" not in text:
-  # Insert a licenses step after first occurrence of 'cmdline-tools' or 'sdkmanager'
-  insertion_point = text.find("sdkmanager")
-  if insertion_point == -1:
-    insertion_point = text.find("cmdline-tools")
-  if insertion_point == -1:
-    # append at end
-    text = text.rstrip() + "\n\n" + template.split("      - name: Accept Android SDK licenses")[1]  # only the step body
-  else:
-    # For simplicity, append a full licenses step at the end
-    text = text.rstrip() + "\n\n" + "\n".join(template.splitlines()[35:49])
-
-# Normalize the licenses command: replace any 'sdkmanager --licenses' pipe with the safe variant
-  text = re.sub(r"yes\s*\|\s*sdkmanager\s*--licenses[^\n]*",
-  "yes | sdkmanager --licenses > /dev/null 2>&1 || true",
-  text)
-
-# Ensure ANDROID_SDK_ROOT is set somewhere
-if "ANDROID_SDK_ROOT" not in text:
-  # Add env block under jobs.build
-  text = re.sub(r"(jobs:\s*\n\s*[^:\n]+:\s*\n\s*runs-on:[^\n]+\n)",
-  r"\1\n    env:\n      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk\n",
-  text, flags=re.MULTILINE)
-  
-  fixed = text
-
-else:
-  fixed = template
-  
-  dst = Path("/mnt/data/android-ci.fixed.yml")
-  dst.write_text(fixed, encoding="utf-8")
-  
-  # Also prepare a simple diff-like preview (first 2000 chars) for reference
-  preview = f"----- ORIGINAL (first 1000 chars) -----\n{original[:1000]}\n\n----- FIXED (first 1000 chars) -----\n{fixed[:1000]}\n"
-  preview
