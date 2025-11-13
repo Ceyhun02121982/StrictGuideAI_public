@@ -1,9 +1,8 @@
-plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-}
 
 
+android {
+    // должен совпадать с package в MainActivity.kt
+    namespace "com.ceyhun.strictguide"
 
     compileSdk 34
 
