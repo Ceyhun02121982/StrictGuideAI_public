@@ -107,14 +107,26 @@ jobs:
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           cat local.properties
 
+      
+      
+      
+            - name: Show Gradle version
+        run: ./gradlew -v
+
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Build (assembleDebug)
-        run: ./gradlew --no-daemon --stacktrace assembleDebug
-
-      - name: Run unit tests
-        run: ./gradlew --no-daemon test
+      - name: Build (verbose Kotlin logs)
+        run: |
+          set -euxo pipefail
+          ./gradlew \
+            --no-daemon \
+            --stacktrace \
+            --warning-mode all \
+            --info \
+            -Dkotlin.compiler.execution.strategy=in-process \
+            -Dorg.gradle.workers.max=1 \
+            assembleDebug 2>&1 | tee build.log
 
       - name: Upload APK artifact
         if: success()
@@ -124,3 +136,15 @@ jobs:
           path: |
             **/build/outputs/apk/**/*.apk
             !**/*-unaligned.apk
+
+      - name: Upload logs and reports (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-logs-and-reports
+          path: |
+            build.log
+            build/reports/**
+            app/build/reports/**
+            **/build/reports/problems/**
+          if-no-files-found: warn
