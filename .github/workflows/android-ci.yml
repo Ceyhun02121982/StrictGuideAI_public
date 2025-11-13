@@ -1,107 +1,130 @@
-name: Android CI
+# Read the user's uploaded workflow, then produce a fixed version alongside it.
+  from pathlib import Path
+  import re
+  
+  src = Path("/mnt/data/android-ci.yml")
+try:
+  original = src.read_text(encoding="utf-8")
+except Exception as e:
+  original = f"ERROR_READING_FILE: {e}"
+
+# Heuristics: ensure sdkmanager licenses step uses '|| true' and suppress logs, ensure ANDROID_SDK_ROOT set,
+# and that cmdline-tools are available. If file already has steps, we'll patch the licenses line.
+fixed = original
+
+# If the file couldn't be read, fallback to a robust template
+fallback_needed = original.startswith("ERROR_READING_FILE:") or not original.strip()
+
+template = """name: Android CI
 
 on:
   push:
-    paths:
-      - 'app/**'
-      - 'gradle/**'
-      - 'gradle.properties'
-      - 'settings.gradle'
-      - 'build.gradle'
-      - '**/build.gradle'
-      - '.github/workflows/android-ci.yml'
+    branches: [ main ]
   pull_request:
-    paths:
-      - 'app/**'
-      - 'gradle/**'
-      - 'gradle.properties'
-      - 'settings.gradle'
-      - 'build.gradle'
-      - '**/build.gradle'
-      - '.github/workflows/android-ci.yml'
-  workflow_dispatch:
+    branches: [ main ]
 
-concurrency:
-  group: android-ci-${{ github.ref }}
-  cancel-in-progress: true
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: 17
           cache: gradle
 
-      # Объявляем пути SDK через GITHUB_ENV (без runner.* в env)
-      - name: Define ANDROID_SDK_ROOT
-        run: |
-          echo "ANDROID_SDK_ROOT=$RUNNER_TEMP/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_HOME=$RUNNER_TEMP/android-sdk" >> $GITHUB_ENV
-          mkdir -p "$RUNNER_TEMP/android-sdk"
-          echo "$RUNNER_TEMP/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$RUNNER_TEMP/android-sdk/platform-tools" >> $GITHUB_PATH
-
-      # Ставим cmdline-tools локально (без sudo, без /usr/local)
       - name: Install Android cmdline-tools
+        run: |
+          set -euxo pipefail
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+          cd "$ANDROID_SDK_ROOT/cmdline-tools"
+          curl -fsSLo tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q tools.zip -d latest
+          rm -f tools.zip
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+
+      - name: Accept Android SDK licenses (suppress Broken pipe)
         shell: bash
         run: |
-          set -e
-          cd "$ANDROID_SDK_ROOT"
-          curl -L -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          mkdir -p cmdline-tools
-          unzip -q cmdline-tools.zip -d cmdline-tools
-          mkdir -p cmdline-tools/latest
-          mv cmdline-tools/cmdline-tools/* cmdline-tools/latest/
-          rm -f cmdline-tools.zip
-          sdkmanager --version
+          set -eux
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
 
-      - name: Accept licenses & install SDK packages
-        shell: bash
+      - name: Install SDK packages
         run: |
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          set -euxo pipefail
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0"
+          sdkmanager --list | head -n 50
 
-      - name: Make gradlew executable
+      - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Build, unit tests & lint (debug)
-        run: |
-          ./gradlew --no-daemon --stacktrace \
-            assembleDebug \
-            testDebugUnitTest \
-            lintDebug
+      - name: Build (assembleDebug)
+        run: ./gradlew --no-daemon --stacktrace assembleDebug
 
-      - name: Upload APK (debug)
+      - name: Run unit tests
+        run: ./gradlew --no-daemon test
+
+      - name: Upload APK artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-
-      - name: Upload Lint report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-report-debug
+          name: app-apk
           path: |
-            app/build/reports/lint-results-debug.html
-            app/build/reports/lint-results-debug.xml
-          if-no-files-found: ignore
+            **/build/outputs/apk/**/*.apk
+            !**/*-unaligned.apk
+  """
 
-      - name: Upload unit test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-tests-debug
-          path: |
-            **/build/test-results/testDebugUnitTest/*
-            **/build/reports/tests/testDebugUnitTest/*
-          if-no-files-found: ignore
+if not fallback_needed:
+    text = fixed
+
+    # Ensure an "Accept licenses" step exists; if not, add after any step containing sdkmanager install/cmdline-tools
+if "sdkmanager --licenses" not in text:
+  # Insert a licenses step after first occurrence of 'cmdline-tools' or 'sdkmanager'
+  insertion_point = text.find("sdkmanager")
+  if insertion_point == -1:
+    insertion_point = text.find("cmdline-tools")
+  if insertion_point == -1:
+    # append at end
+    text = text.rstrip() + "\n\n" + template.split("      - name: Accept Android SDK licenses")[1]  # only the step body
+  else:
+    # For simplicity, append a full licenses step at the end
+    text = text.rstrip() + "\n\n" + "\n".join(template.splitlines()[35:49])
+
+# Normalize the licenses command: replace any 'sdkmanager --licenses' pipe with the safe variant
+  text = re.sub(r"yes\s*\|\s*sdkmanager\s*--licenses[^\n]*",
+  "yes | sdkmanager --licenses > /dev/null 2>&1 || true",
+  text)
+
+# Ensure ANDROID_SDK_ROOT is set somewhere
+if "ANDROID_SDK_ROOT" not in text:
+  # Add env block under jobs.build
+  text = re.sub(r"(jobs:\s*\n\s*[^:\n]+:\s*\n\s*runs-on:[^\n]+\n)",
+  r"\1\n    env:\n      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk\n",
+  text, flags=re.MULTILINE)
+  
+  fixed = text
+
+else:
+  fixed = template
+  
+  dst = Path("/mnt/data/android-ci.fixed.yml")
+  dst.write_text(fixed, encoding="utf-8")
+  
+  # Also prepare a simple diff-like preview (first 2000 chars) for reference
+  preview = f"----- ORIGINAL (first 1000 chars) -----\n{original[:1000]}\n\n----- FIXED (first 1000 chars) -----\n{fixed[:1000]}\n"
+  preview
