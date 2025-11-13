@@ -102,4 +102,4 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 }
-// камера
+//
