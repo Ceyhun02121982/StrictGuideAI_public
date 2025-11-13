@@ -27,20 +27,63 @@ jobs:
           java-version: 17
           cache: gradle
 
-      - name: Install Android cmdline-tools (safe layout)
+      - name: Install Android cmdline-tools (robust for both zip layouts)
         run: |
           set -euxo pipefail
           mkdir -p "$ANDROID_SDK_ROOT"
           cd "$ANDROID_SDK_ROOT"
-          curl -fsSLo tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          rm -rf "$ANDROID_SDK_ROOT/cmdline-tools"
-          unzip -q tools.zip
-          rm -f tools.zip
+
+          # 1) Download & unzip into a temp location to avoid self-move issues
+          TMP_DIR="$ANDROID_SDK_ROOT/_tools_tmp"
+          rm -rf "$TMP_DIR" "$ANDROID_SDK_ROOT/cmdline-tools"
+          mkdir -p "$TMP_DIR"
+          curl -fsSLo "$TMP_DIR/tools.zip" https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q "$TMP_DIR/tools.zip" -d "$TMP_DIR"
+          rm -f "$TMP_DIR/tools.zip"
+
+          # 2) Detect actual source (two possible layouts from Google)
+          if [ -x "$TMP_DIR/cmdline-tools/bin/sdkmanager" ]; then
+            SRC="$TMP_DIR/cmdline-tools"
+          elif [ -x "$TMP_DIR/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SRC="$TMP_DIR/cmdline-tools/latest"
+          else
+            echo "cmdline-tools not found in archive layout" >&2
+            find "$TMP_DIR" -maxdepth 3 -type d -print
+            exit 1
+          fi
+
+          # 3) Copy contents into target latest/ (not moving folders into themselves)
           mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
-          mv ./cmdline-tools/* "$ANDROID_SDK_ROOT/cmdline-tools/latest/"
-          rmdir ./cmdline-tools
+          cp -R "$SRC/." "$ANDROID_SDK_ROOT/cmdline-tools/latest/"
+
+          # 4) Clean temp and export PATH
+          rm -rf "$TMP_DIR"
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+
+      - name: Detect compileSdk & buildToolsVersion from app/build.gradle*
+        id: detect_sdk
+        run: |
+          set -euxo pipefail
+          COMPILE_SDK=$( (grep -Po '(?<=\bcompileSdk\s)\d+' app/build.gradle 2>/dev/null || true) )
+          if [ -z "$COMPILE_SDK" ]; then
+            COMPILE_SDK=$( (grep -Po '(?<=\bcompileSdk\s*=\s*)\d+' app/build.gradle.kts 2>/dev/null || true) )
+          fi
+          if [ -z "$COMPILE_SDK" ]; then
+            echo "Не удалось определить compileSdk. Укажи compileSdk в app/build.gradle(.kts)." >&2
+            exit 1
+          fi
+
+          BUILD_TOOLS=$( (grep -Po '(?<=\bbuildToolsVersion\s*")[^"]+' app/build.gradle 2>/dev/null || true) )
+          if [ -z "$BUILD_TOOLS" ]; then
+            BUILD_TOOLS=$( (grep -Po '(?<=\bbuildToolsVersion\s*=\s*")[^"]+' app/build.gradle.kts 2>/dev/null || true) )
+          fi
+          if [ -z "$BUILD_TOOLS" ]; then
+            BUILD_TOOLS="${COMPILE_SDK}.0.0"
+          fi
+
+          echo "COMPILE_SDK=$COMPILE_SDK" | tee -a $GITHUB_ENV
+          echo "BUILD_TOOLS=$BUILD_TOOLS" | tee -a $GITHUB_ENV
 
       - name: Accept Android SDK licenses (avoid Broken pipe)
         shell: bash
@@ -54,8 +97,8 @@ jobs:
           set -euxo pipefail
           "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --install \
             "platform-tools" \
-            "platforms;android-34" \
-            "build-tools;34.0.0"
+            "platforms;android-${COMPILE_SDK}" \
+            "build-tools;${BUILD_TOOLS}"
           "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --list | head -n 80
 
       - name: Make Gradle wrapper executable
