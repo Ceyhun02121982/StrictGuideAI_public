@@ -14,7 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      # Один каталог для обоих переменных
       ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      ANDROID_HOME: ${{ github.workspace }}/android-sdk
 
     steps:
       - name: Checkout repository
@@ -33,7 +35,7 @@ jobs:
           mkdir -p "$ANDROID_SDK_ROOT"
           cd "$ANDROID_SDK_ROOT"
 
-          # 1) Download & unzip into a temp location to avoid self-move issues
+          # Временная распаковка, чтобы избежать самопереноса
           TMP_DIR="$ANDROID_SDK_ROOT/_tools_tmp"
           rm -rf "$TMP_DIR" "$ANDROID_SDK_ROOT/cmdline-tools"
           mkdir -p "$TMP_DIR"
@@ -41,7 +43,7 @@ jobs:
           unzip -q "$TMP_DIR/tools.zip" -d "$TMP_DIR"
           rm -f "$TMP_DIR/tools.zip"
 
-          # 2) Detect actual source (two possible layouts from Google)
+          # Два возможных варианта структуры архива
           if [ -x "$TMP_DIR/cmdline-tools/bin/sdkmanager" ]; then
             SRC="$TMP_DIR/cmdline-tools"
           elif [ -x "$TMP_DIR/cmdline-tools/latest/bin/sdkmanager" ]; then
@@ -52,12 +54,10 @@ jobs:
             exit 1
           fi
 
-          # 3) Copy contents into target latest/ (not moving folders into themselves)
           mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
           cp -R "$SRC/." "$ANDROID_SDK_ROOT/cmdline-tools/latest/"
-
-          # 4) Clean temp and export PATH
           rm -rf "$TMP_DIR"
+
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
@@ -70,7 +70,7 @@ jobs:
             COMPILE_SDK=$( (grep -Po '(?<=\bcompileSdk\s*=\s*)\d+' app/build.gradle.kts 2>/dev/null || true) )
           fi
           if [ -z "$COMPILE_SDK" ]; then
-            echo "Не удалось определить compileSdk. Укажи compileSdk в app/build.gradle(.kts)." >&2
+            echo "Не удалось определить compileSdk в app/build.gradle(.kts)." >&2
             exit 1
           fi
 
@@ -100,6 +100,12 @@ jobs:
             "platforms;android-${COMPILE_SDK}" \
             "build-tools;${BUILD_TOOLS}"
           "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --list | head -n 80
+
+      - name: Write local.properties with unified SDK path
+        run: |
+          set -euxo pipefail
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          cat local.properties
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
