@@ -100,3 +100,6 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         voiceManager.destroy()
         super.onDestroy()
+    }
+}
+// камецр
