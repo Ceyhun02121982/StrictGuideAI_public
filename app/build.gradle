@@ -1,10 +1,5 @@
 
 
-android {
-    // должен совпадать с package в MainActivity.kt
-    namespace "com.ceyhun.strictguide"
-
-    compileSdk 34
 
     // берём ключ из переменной среды Windows (если нет — будет пусто)
     def openAiKey = System.getenv("OPENAI_API_KEY") ?: ""
