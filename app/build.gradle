@@ -3,16 +3,16 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-android {
+1android {
     // должен совпадать с package в MainActivity.kt
     namespace "com.ceyhun.strictguide"
 
-    compileSdk 34
+    2compileSdk 34
 
     // берём ключ из переменной среды Windows (если нет — будет пусто)
     def openAiKey = System.getenv("OPENAI_API_KEY") ?: ""
 
-    defaultConfig {
+    3defaultConfig {
         applicationId "com.ceyhun.strictguide"
         minSdk 24
         targetSdk 34
