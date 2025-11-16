@@ -1,4 +1,4 @@
-1package com.ceyhun.strictguide
+package com.ceyhun.strictguide
 
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
