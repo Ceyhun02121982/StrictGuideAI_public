@@ -14,10 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      # Один каталог для обоих переменных
       ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
       ANDROID_HOME: ${{ github.workspace }}/android-sdk
-      COMPILE_SDK: 34
-      BUILD_TOOLS: 34.0.0
 
     steps:
       - name: Checkout repository
@@ -30,65 +29,92 @@ jobs:
           java-version: 17
           cache: gradle
 
-      - name: Install Android cmdline-tools
+      - name: Install Android cmdline-tools (robust for both zip layouts)
         run: |
           set -euxo pipefail
           mkdir -p "$ANDROID_SDK_ROOT"
           cd "$ANDROID_SDK_ROOT"
 
-          # Скачиваем commandline-tools
-          curl -fsSLo cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          # Временная распаковка, чтобы избежать самопереноса
+          TMP_DIR="$ANDROID_SDK_ROOT/_tools_tmp"
+          rm -rf "$TMP_DIR" "$ANDROID_SDK_ROOT/cmdline-tools"
+          mkdir -p "$TMP_DIR"
+          curl -fsSLo "$TMP_DIR/tools.zip" https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q "$TMP_DIR/tools.zip" -d "$TMP_DIR"
+          rm -f "$TMP_DIR/tools.zip"
 
-          # Распаковываем во временную папку
-          mkdir -p cmdline-tools
-          unzip -q cmdline-tools.zip -d cmdline-tools
-          rm -f cmdline-tools.zip
+          # Два возможных варианта структуры архива
+          if [ -x "$TMP_DIR/cmdline-tools/bin/sdkmanager" ]; then
+            SRC="$TMP_DIR/cmdline-tools"
+          elif [ -x "$TMP_DIR/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SRC="$TMP_DIR/cmdline-tools/latest"
+          else
+            echo "cmdline-tools not found in archive layout" >&2
+            find "$TMP_DIR" -maxdepth 3 -type d -print
+            exit 1
+          fi
 
-          # Внутри архива уже есть папка "cmdline-tools", переносим её в .../cmdline-tools/latest
-          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
-          mv cmdline-tools/cmdline-tools "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          cp -R "$SRC/." "$ANDROID_SDK_ROOT/cmdline-tools/latest/"
+          rm -rf "$TMP_DIR"
 
-          # Добавляем в PATH
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
-      - name: Accept Android SDK licenses
+      - name: Detect compileSdk & buildToolsVersion from app/build.gradle*
+        id: detect_sdk
+        run: |
+          set -euxo pipefail
+          COMPILE_SDK=$( (grep -Po '(?<=\bcompileSdk\s)\d+' app/build.gradle 2>/dev/null || true) )
+          if [ -z "$COMPILE_SDK" ]; then
+            COMPILE_SDK=$( (grep -Po '(?<=\bcompileSdk\s*=\s*)\d+' app/build.gradle.kts 2>/dev/null || true) )
+          fi
+          if [ -z "$COMPILE_SDK" ]; then
+            echo "Не удалось определить compileSdk в app/build.gradle(.kts)." >&2
+            exit 1
+          fi
+
+          BUILD_TOOLS=$( (grep -Po '(?<=\bbuildToolsVersion\s*")[^"]+' app/build.gradle 2>/dev/null || true) )
+          if [ -z "$BUILD_TOOLS" ]; then
+            BUILD_TOOLS=$( (grep -Po '(?<=\bbuildToolsVersion\s*=\s*")[^"]+' app/build.gradle.kts 2>/dev/null || true) )
+          fi
+          if [ -z "$BUILD_TOOLS" ]; then
+            BUILD_TOOLS="${COMPILE_SDK}.0.0"
+          fi
+
+          echo "COMPILE_SDK=$COMPILE_SDK" | tee -a $GITHUB_ENV
+          echo "BUILD_TOOLS=$BUILD_TOOLS" | tee -a $GITHUB_ENV
+
+      - name: Accept Android SDK licenses (avoid Broken pipe)
         shell: bash
         run: |
           set -eux
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --version
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
 
       - name: Install SDK packages
         run: |
           set -euxo pipefail
-          sdkmanager --install \
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --install \
             "platform-tools" \
             "platforms;android-${COMPILE_SDK}" \
             "build-tools;${BUILD_TOOLS}"
-          sdkmanager --list | head -n 50
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --list | head -n 80
+
+      - name: Write local.properties with unified SDK path
+        run: |
+          set -euxo pipefail
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          cat local.properties
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Show Gradle version
-        run: ./gradlew -v
-
-      - name: Build (verbose Kotlin logs)
-        run: |
-          set -euxo pipefail
-          ./gradlew \
-            --no-daemon \
-            --stacktrace \
-            --warning-mode all \
-            --info \
-            -Dkotlin.compiler.execution.strategy=in-process \
-            -Dorg.gradle.workers.max=1 \
-            assembleDebug 2>&1 | tee build.log
+      - name: Build (assembleDebug)
+        run: ./gradlew --no-daemon --stacktrace assembleDebug
 
       - name: Run unit tests
-        run: |
-          set -euxo pipefail
-          ./gradlew --no-daemon --stacktrace test
+        run: ./gradlew --no-daemon test
 
       - name: Upload APK artifact
         if: success()
@@ -98,15 +124,3 @@ jobs:
           path: |
             **/build/outputs/apk/**/*.apk
             !**/*-unaligned.apk
-
-      - name: Upload logs and reports (always)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gradle-logs-and-reports
-          path: |
-            build.log
-            build/reports/**
-            app/build/reports/**
-            **/build/reports/problems/**
-          if-no-files-found: warn

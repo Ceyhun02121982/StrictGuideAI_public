@@ -1,33 +1,3 @@
-##############################
-# Windows system junk
-##############################
-desktop.ini
-Thumbs.db
-Thumbs.db:encryptable
-
-##############################
-# JetBrains / Android Studio temp
-##############################
-*.tmp
-*.temp
-
-##############################
-# Android Emulator & Build junk
-##############################
-*.lock
-*.log
-*.cache
-
-##############################
-# Prevent driveupload junk
-##############################
-*.tmp.driveupload
-*.driveupload
-tmp.driveupload
-
-
-
-
 ########################################
 # 🌍 SYSTEM & IDE JUNK
 ########################################
