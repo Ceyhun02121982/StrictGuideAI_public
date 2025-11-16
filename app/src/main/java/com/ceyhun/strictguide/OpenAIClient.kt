@@ -1,4 +1,4 @@
-package com.ceyhun.strictguide
+1package com.ceyhun.strictguide
 
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -9,7 +9,7 @@ import java.util.concurrent.Executors
 
 class OpenAIClient {
 
-    private val client = OkHttpClient()
+   2private val client = OkHttpClient()
     private val executor = Executors.newSingleThreadExecutor()
 
     fun ask(userText: String, scene: String, onAnswer: (String) -> Unit) {
@@ -19,7 +19,7 @@ class OpenAIClient {
             return
         }
 
-        val systemPrompt = """
+        3val systemPrompt = """
             Ты голосовой и навигационный ассистент для слепого человека.
             Камера видит: $scene
             Если сцена непонятная — попроси повернуть телефон медленно.
