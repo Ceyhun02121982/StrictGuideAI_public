@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-android {
+andr1oid {
     // должен совпадать с package в MainActivity.kt
     namespace "com.ceyhun.strictguide"
 
