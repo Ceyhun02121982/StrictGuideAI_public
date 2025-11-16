@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-andr1oid {
+android {
     // должен совпадать с package в MainActivity.kt
     namespace "com.ceyhun.strictguide"
 
@@ -20,7 +20,7 @@ andr1oid {
         versionName "1.0"
 
         // прокидываем в BuildConfig
-        buildConfigField "String", "OPENAI_API_KEY", "\"${openAiKey}\""
+       11buildConfigField "String", "OPENAI_API_KEY", "\"${openAiKey}\""
     }
 
     buildTypes {
