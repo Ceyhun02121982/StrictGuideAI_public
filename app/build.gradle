@@ -1,9 +1,9 @@
-plugins {
+1plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
 
-android {
+1android {
     // должен совпадать с package в MainActivity.kt
     namespace "com.ceyhun.strictguide"
 
@@ -12,7 +12,7 @@ android {
     // берём ключ из переменной среды Windows (если нет — будет пусто)
     def openAiKey = System.getenv("OPENAI_API_KEY") ?: ""
 
-    defaultConfig {
+    1defaultConfig {
         applicationId "com.ceyhun.strictguide"
         minSdk 24
         targetSdk 34
@@ -23,7 +23,7 @@ android {
         buildConfigField "String", "OPENAI_API_KEY", "\"${openAiKey}\""
     }
 
-    11buildTypes {
+    1buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
