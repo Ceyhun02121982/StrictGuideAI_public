@@ -1,4 +1,4 @@
-plugins {
+plu1gins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
