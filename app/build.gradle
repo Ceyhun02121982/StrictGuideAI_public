@@ -1,4 +1,4 @@
-plugins {
+plu22gins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
@@ -20,7 +20,7 @@ android {
         versionName "1.0"
 
         // прокидываем в BuildConfig
-       11buildConfigField "String", "OPENAI_API_KEY", "\"${openAiKey}\""
+        buildConfigField "String", "OPENAI_API_KEY", "\"${openAiKey}\""
     }
 
     buildTypes {
