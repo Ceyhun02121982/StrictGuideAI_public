@@ -24,28 +24,33 @@ class VoiceManager(
 
     fun startListening() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU")
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Пожалуйста, говорите…")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Говорите…")
         }
 
         speechRecognizer?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
-                speak("Я вас слушаю")
+                speak("Слушаю")
             }
 
             override fun onResults(results: Bundle?) {
-                val texts = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                val texts =
+                    results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 val userText = texts?.firstOrNull()
                 if (!userText.isNullOrBlank()) {
                     onUserSaid(userText)
                 } else {
-                    speak("Извините, я вас не расслышал. Пожалуйста, повторите.")
+                    speak("Не услышал, повтори")
                 }
             }
 
             override fun onError(error: Int) {
-                speak("Произошла ошибка. Пожалуйста, попробуйте ещё раз.")
+                // не будем сильно ругаться, просто попросим повторить
+                speak("Повтори ещё раз")
             }
 
             override fun onBeginningOfSpeech() {}
@@ -60,9 +65,8 @@ class VoiceManager(
     }
 
     fun speak(text: String) {
-        if (text.isNotBlank()) {
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
-        }
+        if (text.isBlank()) return
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
     }
 
     override fun onInit(status: Int) {

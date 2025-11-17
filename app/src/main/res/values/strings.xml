@@ -3,9 +3,26 @@
     <string name="app_name">StrictGuide</string>
     <string name="openai_api_key">YOUR_API_KEY_HERE1</string>
 
-
     <!-- UI-       -->
     <string name="btn_start">      </string>
     <string name="btn_stop">    </string>
     <string name="status_text">      :      </string>
+
+    <!-- Microphone Permission Messages -->
+    <string name="microphone_permission_request">Для использования микрофона, пожалуйста, предоставьте разрешение на доступ к микрофону.</string>
+    <string name="microphone_permission_denied">Разрешение на доступ к микрофону было отклонено. Пожалуйста, включите его в настройках приложения.</string>
+    <string name="microphone_permission_hint">Чтобы включить доступ к микрофону, перейдите в настройки вашего устройства и активируйте разрешение для приложения.</string>
+
+    <!-- Camera Permission Messages -->
+    <string name="camera_permission_request">Для использования камеры, пожалуйста, предоставьте разрешение на доступ к камере.</string>
+    <string name="camera_permission_denied">Разрешение на доступ к камере было отклонено. Пожалуйста, включите его в настройках приложения.</string>
+    <string name="camera_permission_hint">Чтобы включить доступ к камере, перейдите в настройки вашего устройства и активируйте разрешение для приложения.</string>
+    <string name="camera_permission_accessibility_hint">Чтобы использовать камеру, активируйте разрешение и убедитесь, что ваше устройство поддерживает эту функцию.</string>
+
+    <!-- GPS Permission Messages -->
+    <string name="gps_permission_request">Для использования GPS, пожалуйста, предоставьте разрешение на доступ к местоположению.</string>
+    <string name="gps_permission_denied">Разрешение на доступ к GPS было отклонено. Пожалуйста, включите его в настройках приложения.</string>
+    <string name="gps_permission_hint">Чтобы включить доступ к GPS, перейдите в настройки вашего устройства и активируйте разрешение для приложения.</string>
+    <string name="gps_accessibility_hint">Чтобы использовать GPS, убедитесь, что разрешение включено и GPS активирован на вашем устройстве.</string>
+
 </resources>
