@@ -24,10 +24,7 @@ class VoiceManager(
 
     fun startListening() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU")
             putExtra(RecognizerIntent.EXTRA_PROMPT, "Говорите…")
         }
@@ -38,8 +35,7 @@ class VoiceManager(
             }
 
             override fun onResults(results: Bundle?) {
-                val texts =
-                    results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                val texts = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 val userText = texts?.firstOrNull()
                 if (!userText.isNullOrBlank()) {
                     onUserSaid(userText)
@@ -49,7 +45,6 @@ class VoiceManager(
             }
 
             override fun onError(error: Int) {
-                // не будем сильно ругаться, просто попросим повторить
                 speak("Повтори ещё раз")
             }
 
@@ -65,8 +60,9 @@ class VoiceManager(
     }
 
     fun speak(text: String) {
-        if (text.isBlank()) return
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
+        if (text.isNotBlank()) {
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
+        }
     }
 
     override fun onInit(status: Int) {
