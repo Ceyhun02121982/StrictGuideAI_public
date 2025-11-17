@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    // должен совпадать с package в MainActivity.kt
+    // 1 должен совпадать с package в MainActivity.kt
     namespace "com.ceyhun.strictguide"
 
     compileSdk 34
