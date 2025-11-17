@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".GpsActivity">
+
+    <!-- Текстовое поле для показа текущих координат -->
+    <TextView
+        android:id="@+id/tvGpsCoords"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Координаты: "
+        android:textSize="18sp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Текстовое поле для статуса GPS -->
+    <TextView
+        android:id="@+id/tvGpsStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Статус: "
+        android:textSize="18sp"
+        app:layout_constraintTop_toBottomOf="@id/tvGpsCoords"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Кнопка для старта GPS -->
+    <Button
+        android:id="@+id/btnGpsStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Старт GPS"
+        app:layout_constraintTop_toBottomOf="@id/tvGpsStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
