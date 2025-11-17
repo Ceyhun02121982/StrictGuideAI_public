@@ -9,7 +9,7 @@ import java.util.concurrent.Executors
 
 class OpenAIClient {
 
-   private val client = OkHttpClient()
+    private val client = OkHttpClient()
     private val executor = Executors.newSingleThreadExecutor()
 
     fun ask(userText: String, scene: String, onAnswer: (String) -> Unit) {
