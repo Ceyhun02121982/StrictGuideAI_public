@@ -26,12 +26,12 @@ class VoiceManager(
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU")
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Говорите…")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Пожалуйста, говорите…")
         }
 
         speechRecognizer?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
-                speak("Слушаю")
+                speak("Я вас слушаю")
             }
 
             override fun onResults(results: Bundle?) {
@@ -40,12 +40,12 @@ class VoiceManager(
                 if (!userText.isNullOrBlank()) {
                     onUserSaid(userText)
                 } else {
-                    speak("Не услышал, повтори")
+                    speak("Извините, я вас не расслышал. Пожалуйста, повторите.")
                 }
             }
 
             override fun onError(error: Int) {
-                speak("Повтори ещё раз")
+                speak("Произошла ошибка. Пожалуйста, попробуйте ещё раз.")
             }
 
             override fun onBeginningOfSpeech() {}
