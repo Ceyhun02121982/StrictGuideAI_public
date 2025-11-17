@@ -1,4 +1,4 @@
-﻿package com.ceyhun.strictguide
+package com.ceyhun.strictguide
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -31,7 +31,9 @@ class MainActivity : AppCompatActivity() {
 
     private val requestMic = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { /* ok */ }
+    ) { granted ->
+        if (!granted) tvStatus.text = "Нет разрешения на микрофон"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,4 +104,3 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 }
-// камецр
