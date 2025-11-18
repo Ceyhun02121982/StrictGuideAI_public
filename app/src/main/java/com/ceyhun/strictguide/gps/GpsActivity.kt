@@ -98,6 +98,7 @@ class GpsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
             // Здесь можно добавить реальный запрос разрешений через ActivityCompat.requestPermissions
             // или вынести в общий PermissionsManager.
+            Log.w("GpsActivity", "Разрешение на доступ к местоположению не предоставлено.")
             return
         }
 
@@ -116,6 +117,7 @@ class GpsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 // Если координаты не получены — даём подсказку из strings.xml
                 val hint = getString(R.string.gps_permission_hint)
                 updateStatus(hint, speak = true)
+                Log.w("GpsActivity", "Координаты не получены.")
             }
         }
     }
@@ -139,5 +141,6 @@ class GpsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         gpsManager.stopLocationUpdates()
         tts?.stop()
         tts?.shutdown()
+        Log.d("GpsActivity", "GpsActivity уничтожен, остановка обновлений GPS и TTS.")
     }
 }
