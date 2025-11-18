@@ -9,8 +9,6 @@ import android.speech.tts.TextToSpeech
 import androidx.appcompat.app.AppCompatActivity
 import java.util.Locale
 
-const val ERROR_USER_CANCELED = 0
-
 class VoiceManager(
     private val activity: AppCompatActivity,
     private val onUserSaid: (String) -> Unit
@@ -51,14 +49,8 @@ class VoiceManager(
             }
 
             override fun onError(error: Int) {
-                // отдельный случай — пользователь сам отменил
-                if (error == SpeechRecognizer.ERROR_CLIENT ||
-                    error == SpeechRecognizer.ERROR_USER_CANCELED
-                ) {
-                    speak("Вы отменили голосовой ввод.")
-                } else {
-                    speak("Повтори ещё раз")
-                }
+                // Без фантазийных констант, просто просим повторить
+                speak("Повтори ещё раз")
             }
 
             override fun onBeginningOfSpeech() {}
