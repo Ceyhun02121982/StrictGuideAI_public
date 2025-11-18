@@ -25,4 +25,21 @@
     <string name="gps_permission_hint">Чтобы включить доступ к GPS, перейдите в настройки вашего устройства и активируйте разрешение для приложения.</string>
     <string name="gps_accessibility_hint">Чтобы использовать GPS, убедитесь, что разрешение включено и GPS активирован на вашем устройстве.</string>
 
+    <!-- GPS Start/Error Messages -->
+    <string name="gps_start_message">GPS запущен. Пожалуйста, подождите, пока мы определим ваше местоположение.</string>
+    <string name="gps_error_message">Ошибка GPS. Пожалуйста, проверьте настройки местоположения и попробуйте снова.</string>
+    <string name="gps_voice_start_message">GPS запущен. Пожалуйста, подождите, пока мы определим ваше местоположение.</string>
+    <string name="gps_voice_error_message">Ошибка GPS. Пожалуйста, проверьте настройки местоположения и попробуйте снова.</string>
+
+    <!-- Speech Recognizer Error Messages -->
+    <string name="speech_recognizer_error_network">Ошибка сети. Пожалуйста, проверьте подключение к интернету.</string>
+    <string name="speech_recognizer_error_silence">Слишком тихий голос. Пожалуйста, говорите громче.</string>
+    <string name="speech_recognizer_error_user_canceled">Запись отменена пользователем. Пожалуйста, попробуйте снова.</string>
+
+    <!-- Camera Guidance Messages -->
+    <string name="camera_guidance_position">Пожалуйста, направьте камеру на объект.</string>
+    <string name="camera_guidance_found">Объект найден! Пожалуйста, зафиксируйте его в центре экрана.</string>
+    <string name="camera_guidance_stop">Чтобы остановить режим камеры, нажмите кнопку "Стоп".</string>
+    <string name="camera_guidance_stop_hint">Для завершения работы камеры, просто нажмите на кнопку "Стоп" в интерфейсе.</string>
+
 </resources>

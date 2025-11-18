@@ -2,7 +2,10 @@ package com.ceyhun.strictguide
 
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.*
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
@@ -116,5 +119,15 @@ class VisionManager(
                 sceneStore.update("ошибка распознавания")
                 imageProxy.close()
             }
+    }
+
+    /**
+     * Для незрячего: вместо перехода на несуществующий экран просто объясняем,
+     * что он уже в режиме камеры.
+     */
+    fun launchCameraFragment() {
+        val message = "Режим камеры уже активен. Вы на экране камеры."
+        onStatus(message)
+        onSpeak(message)
     }
 }

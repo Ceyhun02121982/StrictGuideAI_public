@@ -107,6 +107,7 @@ class GpsManager(private val context: Context) {
 
             override fun onProviderDisabled(provider: String) {
                 Log.w(TAG, "Провайдер отключен: $provider")
+                callback(null) // Добавлено для обработки отключенного провайдера
             }
         }
 

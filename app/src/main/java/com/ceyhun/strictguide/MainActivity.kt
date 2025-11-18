@@ -1,4 +1,4 @@
-﻿package com.ceyhun.strictguide
+package com.ceyhun.strictguide
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -16,7 +16,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvStatus: TextView
     private lateinit var btnMic: Button
 
-    // наши “модули”
     private lateinit var visionManager: VisionManager
     private lateinit var voiceManager: VoiceManager
     private lateinit var aiClient: OpenAIClient
@@ -41,12 +40,9 @@ class MainActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tvStatus)
         btnMic = findViewById(R.id.btnMic)
 
-        // хранилище “что видит камера”
         sceneStore = SceneStore()
 
-        // голос
         voiceManager = VoiceManager(this) { text ->
-            // когда распознали речь — вызываем ИИ
             val scene = sceneStore.getScene()
             aiClient.ask(text, scene) { answer ->
                 runOnUiThread {
@@ -56,10 +52,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ИИ
         aiClient = OpenAIClient()
 
-        // камера + анализ
         visionManager = VisionManager(
             activity = this,
             previewView = previewView,
@@ -102,4 +96,3 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 }
-// камецр

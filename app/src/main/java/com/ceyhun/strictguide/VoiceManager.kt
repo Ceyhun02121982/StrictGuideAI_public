@@ -9,6 +9,8 @@ import android.speech.tts.TextToSpeech
 import androidx.appcompat.app.AppCompatActivity
 import java.util.Locale
 
+const val ERROR_USER_CANCELED = 0
+
 class VoiceManager(
     private val activity: AppCompatActivity,
     private val onUserSaid: (String) -> Unit
@@ -49,8 +51,14 @@ class VoiceManager(
             }
 
             override fun onError(error: Int) {
-                // не будем сильно ругаться, просто попросим повторить
-                speak("Повтори ещё раз")
+                // отдельный случай — пользователь сам отменил
+                if (error == SpeechRecognizer.ERROR_CLIENT ||
+                    error == SpeechRecognizer.ERROR_USER_CANCELED
+                ) {
+                    speak("Вы отменили голосовой ввод.")
+                } else {
+                    speak("Повтори ещё раз")
+                }
             }
 
             override fun onBeginningOfSpeech() {}
@@ -79,5 +87,45 @@ class VoiceManager(
         tts?.stop()
         tts?.shutdown()
         speechRecognizer?.destroy()
+    }
+
+    fun recognizeShortCommands() {
+        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) {
+                speak("Говорите команду")
+            }
+
+            override fun onResults(results: Bundle?) {
+                val texts =
+                    results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                val userText = texts?.firstOrNull()
+                if (!userText.isNullOrBlank()) {
+
+                    val normalized = userText
+                        .trim()
+                        .lowercase(Locale.getDefault())
+
+                    when (normalized) {
+                        "где я" -> onUserSaid("Вы находитесь в текущем местоположении.")
+                        "что вокруг" -> onUserSaid("Вокруг вас находятся здания и деревья.")
+                        "прочитай текст" -> onUserSaid("Текст для чтения.")
+                        else -> speak("Команда не распознана, повторите.")
+                    }
+                } else {
+                    speak("Не услышал, повторите команду.")
+                }
+            }
+
+            override fun onError(error: Int) {
+                speak("Ошибка распознавания, повторите команду.")
+            }
+
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {}
+            override fun onPartialResults(partialResults: Bundle?) {}
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+        })
     }
 }

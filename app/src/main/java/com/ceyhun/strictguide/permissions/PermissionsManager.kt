@@ -19,9 +19,7 @@ object PermissionsManager {
      * @return true, если разрешение предоставлено, иначе false.
      */
     fun checkGpsPermission(context: Context): Boolean {
-        val isGranted = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        Log.d(TAG, "GPS Permission granted: $isGranted")
-        return isGranted
+        return checkPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
     /**
@@ -31,9 +29,7 @@ object PermissionsManager {
      * @return true, если разрешение предоставлено, иначе false.
      */
     fun checkCameraPermission(context: Context): Boolean {
-        val isGranted = ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-        Log.d(TAG, "Camera Permission granted: $isGranted")
-        return isGranted
+        return checkPermission(context, android.Manifest.permission.CAMERA)
     }
 
     /**
@@ -43,8 +39,12 @@ object PermissionsManager {
      * @return true, если разрешение предоставлено, иначе false.
      */
     fun checkMicPermission(context: Context): Boolean {
-        val isGranted = ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-        Log.d(TAG, "Microphone Permission granted: $isGranted")
+        return checkPermission(context, android.Manifest.permission.RECORD_AUDIO)
+    }
+
+    private fun checkPermission(context: Context, permission: String): Boolean {
+        val isGranted = ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+        Log.d(TAG, "$permission granted: $isGranted")
         return isGranted
     }
 }
