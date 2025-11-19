@@ -98,7 +98,11 @@ class VoiceManager(
                         .lowercase(Locale.getDefault())
 
                     when (normalized) {
-                        "где я" -> onUserSaid("Вы находитесь в текущем местоположении.")
+                        "где я" -> {
+                            onUserSaid("Вы находитесь в текущем местоположении.")
+                            val intent = Intent(activity, com.ceyhun.strictguide.gps.GpsActivity::class.java)
+                            activity.startActivity(intent)
+                        }
                         "что вокруг" -> onUserSaid("Вокруг вас находятся здания и деревья.")
                         "прочитай текст" -> onUserSaid("Текст для чтения.")
                         else -> speak("Команда не распознана, повторите.")

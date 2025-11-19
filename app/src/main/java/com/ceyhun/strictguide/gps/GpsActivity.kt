@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.ceyhun.strictguide.R
+import com.ceyhun.strictguide.permissions.PermissionsManager
 import java.util.Locale
 
 /**
@@ -90,15 +91,14 @@ class GpsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun startGpsFlow() {
         Log.d("GpsActivity", "Кнопка старта GPS нажата")
 
-        // 1. Проверяем разрешения через GpsManager
-        if (!gpsManager.hasLocationPermission()) {
+        // 1. Проверяем разрешения через PermissionsManager
+        if (!PermissionsManager.checkGpsPermission(this)) {
             // Строки уже есть в strings.xml
             val msg = getString(R.string.gps_permission_request)
             updateStatus(msg, speak = true)
 
-            // Здесь можно добавить реальный запрос разрешений через ActivityCompat.requestPermissions
-            // или вынести в общий PermissionsManager.
             Log.w("GpsActivity", "Разрешение на доступ к местоположению не предоставлено.")
+            speakOnce(getString(R.string.gps_permission_denied))
             return
         }
 
@@ -118,6 +118,7 @@ class GpsActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 val hint = getString(R.string.gps_permission_hint)
                 updateStatus(hint, speak = true)
                 Log.w("GpsActivity", "Координаты не получены.")
+                speakOnce(getString(R.string.gps_error_message))
             }
         }
     }

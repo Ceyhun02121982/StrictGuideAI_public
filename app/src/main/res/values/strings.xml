@@ -31,6 +31,13 @@
     <string name="gps_voice_start_message">GPS запущен. Пожалуйста, подождите, пока мы определим ваше местоположение.</string>
     <string name="gps_voice_error_message">Ошибка GPS. Пожалуйста, проверьте настройки местоположения и попробуйте снова.</string>
 
+    <!-- New GPS Messages -->
+    <string name="gps_start_voice_prompt">Старт GPS. Пожалуйста, подождите.</string>
+    <string name="gps_no_permission_voice_prompt">Нет разрешения на доступ к GPS. Пожалуйста, предоставьте разрешение в настройках.</string>
+    <string name="gps_disabled_voice_prompt">GPS отключён. Пожалуйста, включите GPS в настройках устройства.</string>
+    <string name="gps_success_voice_prompt">Координаты успешно получены.</string>
+    <string name="gps_error_voice_prompt">Ошибка получения координат. Пожалуйста, проверьте настройки GPS.</string>
+
     <!-- Speech Recognizer Error Messages -->
     <string name="speech_recognizer_error_network">Ошибка сети. Пожалуйста, проверьте подключение к интернету.</string>
     <string name="speech_recognizer_error_silence">Слишком тихий голос. Пожалуйста, говорите громче.</string>
